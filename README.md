@@ -1,5 +1,7 @@
 # Gondola
 
+*Note that this project isn't in a usable state yet*
+
 Gondola is a media center that is designed to work on a cheap+silent single board computer (SBC) like
 a [Chip](https://getchip.com/) or a [Raspberry Pi](https://www.raspberrypi.org/).
 

@@ -11,7 +11,6 @@ import (
 
 const (
 	validExtensions = "mp4 mkv vob avi mpg m4v"
-	homeRoot        = "Gondola"
 	imageFilename   = "image.jpg"
 	hlsFilename     = "hls.m3u8"
 )
@@ -67,39 +66,42 @@ func tryProcess(folder string, file string, paths Paths) {
 		// Re-generate.
 		generateMetadata(paths)
 	} else {
-		log.Println("Couldn't get exclusive access to", file, "might be still copying")		
+		log.Println("Couldn't get exclusive access to", file, "might be still copying")
 	}
 }
 
 // Keeps track of where all the paths are.
 type Paths struct {
-	Home string // ~ expanded (no tilde)
-	Root string // ~/Gondola (full path, no tilde)
-	NewBase string // ~/Gondola/New
-	NewMovies string // ~/Gondola/New/Movies
-	NewTV string // ~/Gondola/New/TV
-	Staging string // ~/G/Staging
+	Root                 string // Config.Root (expanded path, no tilde)
+	NewBase              string // ~/Gondola/New
+	NewMovies            string // ~/Gondola/New/Movies
+	NewTV                string // ~/Gondola/New/TV
+	Staging              string // ~/G/Staging
 	MoviesRelativeToRoot string // Movies
-	Movies string // ~/G/Movies
-	TVRelativeToRoot string // Movies
-	TV string // ~/G/TV
-	Failed string // ~/Gondola/Failed
+	Movies               string // ~/G/Movies
+	TVRelativeToRoot     string // Movies
+	TV                   string // ~/G/TV
+	Failed               string // ~/Gondola/Failed
 }
 
 func main() {
+	config, configErr := loadConfig()
+	if configErr != nil {
+		log.Fatal(configErr)
+	}
+
 	// Figure out all the folders.
 	var paths Paths
-	paths.Home    = os.Getenv("HOME")
-	paths.Root    = filepath.Join(paths.Home, homeRoot)
+	paths.Root = expandTilde(config.Root)
 	paths.NewBase = filepath.Join(paths.Root, "New")
 	paths.NewMovies = filepath.Join(paths.NewBase, "Movies")
-	paths.NewTV     = filepath.Join(paths.NewBase, "TV")
+	paths.NewTV = filepath.Join(paths.NewBase, "TV")
 	paths.Staging = filepath.Join(paths.Root, "Staging")
 	paths.MoviesRelativeToRoot = "Movies"
-	paths.Movies  = filepath.Join(paths.Root, paths.MoviesRelativeToRoot)
+	paths.Movies = filepath.Join(paths.Root, paths.MoviesRelativeToRoot)
 	paths.TVRelativeToRoot = "TV"
-	paths.TV      = filepath.Join(paths.Root, paths.TVRelativeToRoot)
-	paths.Failed  = filepath.Join(paths.Root, "Failed")
+	paths.TV = filepath.Join(paths.Root, paths.TVRelativeToRoot)
+	paths.Failed = filepath.Join(paths.Root, "Failed")
 	os.MkdirAll(paths.Root, os.ModePerm) // This will cause permission issues on a non-FAT mount eg local drive.
 	os.MkdirAll(paths.NewMovies, os.ModePerm)
 	os.MkdirAll(paths.NewTV, os.ModePerm)
@@ -108,7 +110,7 @@ func main() {
 	os.MkdirAll(paths.Movies, os.ModePerm)
 	os.MkdirAll(paths.TV, os.ModePerm)
 	os.MkdirAll(paths.Failed, os.ModePerm)
-	
+
 	// When starting, re-gen metadata and scan for new files.
 	generateMetadata(paths)
 	scanNewPaths(paths)
@@ -116,7 +118,7 @@ func main() {
 	// Listen for changes on the folder.
 	folders := []string{paths.NewMovies, paths.NewTV}
 	changes := watch(folders)
-	log.Println("Watching for changes")
+	log.Println("Watching for changes in " + strings.Join(folders, ", "))
 	for {
 		<-changes
 		scanNewPaths(paths)
