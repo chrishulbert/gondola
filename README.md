@@ -20,6 +20,11 @@ then serving it using nginx. This can take a very long time eg overnight, so the
 
 * Media must be pre-processed, which can take a long time if it's high quality. Eg I tried a 2-hour 1080p movie, and my Chip took 2 days to transcode it. This is why I recommend this for movies you'll watch over and over again, eg your kids' movies.
 
+## How to install
+
+* Create `~/.gondola` as a config file, with the contents: `root = "~/Gondola"` or wherever you wish your root storage to be.
+* See `exclusive.go` for instructions for configuring this to get sudo access to lsof, for watching the folder for changes.
+
 ## Name
 
 The name is a tortured metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)

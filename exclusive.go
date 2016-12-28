@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"os"
-	"os/exec"
 	"log"
-	"runtime"
-	"fmt"
+	"os/exec"
+	"strings"
 )
 
 // Can the given file be accessed exclusively eg no other process is still writing to it?
@@ -17,31 +15,22 @@ import (
 // And adding the following line (replace 'chris' with the user you'll run as)
 // ubuntu: chris ALL = (root) NOPASSWD: /usr/bin/lsof
 // osx:    chris ALL = (root) NOPASSWD: /usr/sbin/lsof
-// lsof returns the following:
-// Missing file: error 1, lots of text
-// File there, other is using it: status 0, 1+ line(s)
-// File there, nobody using it: status 1, 0 lines
-// On OSX, it might think the current process is touching it, so check for that.
 func canGetExclusiveAccessToFile(path string) bool {
-	// On OSX, it thinks the current process is touching the file as well, so for now i simply
-	// return true and recommend you only install on linux.
-	if runtime.GOOS == "darwin" {
-		log.Println("On OSX, can't determine file exclusivity, assuming it is exclusive. You really should install this only on linux until this is fixed.")
-		return true
-	}
-
-	cmd := exec.Command("sudo", "lsof", "-Fp", path)
+	cmd := exec.Command("sudo", "lsof", "-Fal", path)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Run()
-	outString := out.String()
 
-	// This doesn't quite work just yet.
-	// For OSX, it may return "pX" where x is the current PID.
-	os.Getpid()
-	osxThisPidOnly := fmt.Sprintf("p%d", os.Getpid())
-	// fmt.Println("outString >", outString, "<")
-	// fmt.Println("osxThisPidOnly >", osxThisPidOnly, "<")
+	outString := strings.TrimSpace(out.String())
+	outLines := strings.Split(outString, "\n")
 
-	return outString == "" || outString == osxThisPidOnly
+	for _, line := range outLines {
+		if line == "aw" || line == "au" || line == "lw" || line == "lW" || line == "lu" {
+			log.Println("Another process has a lock on this file - it's likely still being copied")
+			return false // Someone has access/lock for writing/updating.
+		}
+	}
+
+	log.Println("No other process has dibs on this file, likely the transfer has completed")
+	return true
 }

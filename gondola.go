@@ -118,7 +118,7 @@ func main() {
 	// Listen for changes on the folder.
 	folders := []string{paths.NewMovies, paths.NewTV}
 	changes := watch(folders)
-	log.Println("Watching for changes in " + strings.Join(folders, ", "))
+	log.Println("Watching for changes in " + paths.NewBase)
 	for {
 		<-changes
 		scanNewPaths(paths)
