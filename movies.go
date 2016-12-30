@@ -62,9 +62,10 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 
 	// Success!
 	log.Println("Success! Removing original.")
-	goodFolder := filepath.Join(paths.Movies, fileTitle) // TODO use the title from OMDB and filesystem-sanitise it.
-	os.Rename(stagingOutputFolder, goodFolder)           // Move the HLS across.
-	os.Remove(inPath)                                    // Remove the original file.
+	goodTitle := fileTitle + " " + omdbMovie.Year // TODO use the title from OMDB and filesystem-sanitise it.
+	goodFolder := filepath.Join(paths.Movies, goodTitle)
+	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
+	os.Remove(inPath)                          // Remove the original file.
 	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
 
 	return nil
