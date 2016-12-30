@@ -1,14 +1,19 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os/exec"
 	"strings"
-	"errors"
 )
 
 // Tries to convert the given video to hls.
-func convertToHLSAppropriately(inPath string, outPath string) error {
+func convertToHLSAppropriately(inPath string, outPath string, config Config) error {
+	if config.DebugSkipHLS {
+		// Skip conversion, this is good for debugging.
+		log.Println("Not converting to HLS due to DebugSkipHLS flag")
+		return nil
+	}
 
 	// Probe it to find out what needs doing.
 	log.Println("Probing, this sometimes takes a while...")
@@ -56,7 +61,7 @@ func convertToHLSAppropriately(inPath string, outPath string) error {
 	} else {
 		// Any other codec needs transcoding.
 		log.Println("Video needs transcoding, original codec doesn't suit")
-		videoArgs = nil		
+		videoArgs = nil
 	}
 
 	return runConvertToHLS(inPath, outPath, audioCommand, videoArgs)
@@ -77,7 +82,7 @@ func runConvertToHLS(inPath string, outPath string, audioArgs []string, videoArg
 	}
 
 	// Did it fail with the annex b issue? If so, retry.
-	// You can't simply *always* have h264_mp4toannexb enabled, it fails if not needed. 
+	// You can't simply *always* have h264_mp4toannexb enabled, it fails if not needed.
 	if err != nil && strings.Contains(string(result), "h264_mp4toannexb") {
 		log.Println("Attempting to convert to HLS using h264_mp4toannexb option")
 		allArgs := append(append(append(append(firstArgs, audioArgs...), videoArgs...), "-bsf:v", "h264_mp4toannexb"), lastArgs...)

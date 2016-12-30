@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	Root string
+	Root         string
+	DebugSkipHLS bool // Skip conversion, this is good for speeding up dev/debugging.
 }
 
 func loadConfig() (Config, error) {

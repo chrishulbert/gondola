@@ -28,12 +28,12 @@ func isValidExtension(extension string) bool {
 }
 
 // Scans the new paths, looking for any media files we're interested in.
-func scanNewPaths(paths Paths) {
-	scanNewPath(paths.NewMovies, paths)
-	scanNewPath(paths.NewTV, paths)
+func scanNewPaths(paths Paths, config Config) {
+	scanNewPath(paths.NewMovies, paths, config)
+	scanNewPath(paths.NewTV, paths, config)
 }
 
-func scanNewPath(whichPath string, paths Paths) {
+func scanNewPath(whichPath string, paths Paths, config Config) {
 	files, err := ioutil.ReadDir(whichPath)
 	if err != nil {
 		log.Println("Couldn't scan path, error: ", err)
@@ -46,7 +46,7 @@ func scanNewPath(whichPath string, paths Paths) {
 				ext := path.Ext(file.Name())
 				if isValidExtension(ext) {
 					log.Println("Found file", file.Name())
-					tryProcess(whichPath, file.Name(), paths)
+					tryProcess(whichPath, file.Name(), paths, config)
 				} else {
 					log.Println("Ignoring file with unexpected extension", file.Name())
 				}
@@ -58,10 +58,10 @@ func scanNewPath(whichPath string, paths Paths) {
 }
 
 // Tries processing a file. Doesn't worry if it can't, eg if the file is half-copied, as the completion of the copy will trigger another scan.
-func tryProcess(folder string, file string, paths Paths) {
+func tryProcess(folder string, file string, paths Paths, config Config) {
 	source := filepath.Join(folder, file)
 	if canGetExclusiveAccessToFile(source) {
-		processMovie(folder, file, paths) // TODO TV!
+		processMovie(folder, file, paths, config) // TODO TV!
 
 		// Re-generate.
 		generateMetadata(paths)
@@ -73,15 +73,15 @@ func tryProcess(folder string, file string, paths Paths) {
 // Keeps track of where all the paths are.
 type Paths struct {
 	Root                 string // Config.Root (expanded path, no tilde)
-	NewBase              string // ~/Gondola/New
-	NewMovies            string // ~/Gondola/New/Movies
-	NewTV                string // ~/Gondola/New/TV
-	Staging              string // ~/G/Staging
+	NewBase              string // Root/New
+	NewMovies            string // Root/New/Movies
+	NewTV                string // Root/New/TV
+	Staging              string // Root/Staging
 	MoviesRelativeToRoot string // Movies
-	Movies               string // ~/G/Movies
-	TVRelativeToRoot     string // Movies
-	TV                   string // ~/G/TV
-	Failed               string // ~/Gondola/Failed
+	Movies               string // Root/Movies
+	TVRelativeToRoot     string // TV
+	TV                   string // Root/TV
+	Failed               string // Root/Failed
 }
 
 func main() {
@@ -89,6 +89,8 @@ func main() {
 	if configErr != nil {
 		log.Fatal(configErr)
 	}
+	log.Println("Config loaded:")
+	log.Printf("%+v\n", config)
 
 	// Figure out all the folders.
 	var paths Paths
@@ -113,7 +115,7 @@ func main() {
 
 	// When starting, re-gen metadata and scan for new files.
 	generateMetadata(paths)
-	scanNewPaths(paths)
+	scanNewPaths(paths, config)
 
 	// Listen for changes on the folder.
 	folders := []string{paths.NewMovies, paths.NewTV}
@@ -121,6 +123,6 @@ func main() {
 	log.Println("Watching for changes in " + paths.NewBase)
 	for {
 		<-changes
-		scanNewPaths(paths)
+		scanNewPaths(paths, config)
 	}
 }

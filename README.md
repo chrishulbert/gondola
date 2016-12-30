@@ -2,7 +2,9 @@
 
 *Note that this project isn't in a usable state yet*
 
-Gondola is a media center that is designed to work on a cheap+silent single board computer (SBC) like
+Sick of your kids' DVD's getting scratched and unusable?
+
+Gondola is a media center that is designed to work from a cheap+silent single board computer (SBC) like
 a [Chip](https://getchip.com/) or a [Raspberry Pi](https://www.raspberrypi.org/).
 
 It accomplishes this feat by pre-processing your media into [HLS](https://developer.apple.com/streaming/),
@@ -15,6 +17,8 @@ then serving it using nginx. This can take a very long time eg overnight, so the
 * Silent - my old media center spins its fans all day - this one won't, as most SBC's have no fan.
 * Simple - therefore, hopefully more reliable than the other common alternatives.
 * Seekable - because it pre-processes your media into HLS, which makes individual files for every few seconds, your media seeks perfectly (important for kids!).
+* Just drop your eg VOB files into a 'New' folder using eg [ForkLift](http://www.binarynights.com/Forklift/), and it'll 
+wait until transfer has complete to begin importing it automatically.
 
 ## Drawbacks
 
@@ -24,6 +28,22 @@ then serving it using nginx. This can take a very long time eg overnight, so the
 
 * Create `~/.gondola` as a config file, with the contents: `root = "~/Gondola"` or wherever you wish your root storage to be.
 * See `exclusive.go` for instructions for configuring this to get sudo access to lsof, for watching the folder for changes.
+
+## Notes
+
+* Gondola, after transcoding to HLS, removes the source file. The assumption is that the user ripped their original from their DVD so doesn't care to lose it. Plus this saves storage space.
+
+## Config
+
+Configuration goes into ~/.gondola
+
+It uses TOML format (same as windows INI files). Options include:
+
+`root = "~/Some/Folder/Where/I/Want/My/Data/To/Go"`
+
+This allows you to disable the transcoding, which is useful to speed up dev.
+
+`debugSkipHLS = true`
 
 ## Name
 

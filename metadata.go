@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"log"
-	"strings"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (

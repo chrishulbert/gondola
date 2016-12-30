@@ -1,15 +1,15 @@
 package main
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"errors"
 )
 
-// Actually processses a file that's in the staging folder.
-func processMovie(folder string, file string, paths Paths) error {
+// Actually processses a file that's in the new folder.
+func processMovie(folder string, file string, paths Paths, config Config) error {
 	log.Println("Processing", file)
 
 	// Parse the title.
@@ -33,7 +33,7 @@ func processMovie(folder string, file string, paths Paths) error {
 	// Convert it.
 	inPath := filepath.Join(folder, file)
 	outPath := filepath.Join(stagingOutputFolder, hlsFilename)
-	convertErr := convertToHLSAppropriately(inPath, outPath)
+	convertErr := convertToHLSAppropriately(inPath, outPath, config)
 
 	// Fail! Move it to the failed folder.
 	if convertErr != nil {
@@ -48,7 +48,7 @@ func processMovie(folder string, file string, paths Paths) error {
 	log.Println("Success! Removing original.")
 	goodFolder := filepath.Join(paths.Movies, title)
 	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
-	os.Remove(inPath) // Remove the original file.
+	os.Remove(inPath)                          // Remove the original file.
 	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
 
 	return nil
