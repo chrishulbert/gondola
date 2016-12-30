@@ -21,9 +21,13 @@ type OmdbMovie struct {
 	Response string
 }
 
-func omdbRequest(year int, title string) (OmdbMovie, error) {
+// Year can be nil.
+func omdbRequest(title string, year *int) (OmdbMovie, error) {
 	// Hit the api.
-	url := "http://www.omdbapi.com/?y=" + strconv.Itoa(year) + "&r=json&t=" + url.QueryEscape(title)
+	url := "http://www.omdbapi.com/?t=" + url.QueryEscape(title)
+	if year != nil {
+		url += "&y=" + strconv.Itoa(*year)
+	}
 	data, err := omdbDownload(url)
 	if err != nil {
 		return OmdbMovie{}, err

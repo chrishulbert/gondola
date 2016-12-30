@@ -13,11 +13,14 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 	log.Println("Processing", file)
 
 	// Parse the title.
-	title := titleFromFilename(file)
+	title, _ := titleAndYearFromFilename(file)
 
 	// Make the temporary output folder.
 	stagingOutputFolder := filepath.Join(paths.Staging, title)
 	os.MkdirAll(stagingOutputFolder, os.ModePerm)
+
+	// Get the OMDB metadata.
+	// omdbMovie, omdbErr := omdbRequest(title, year)
 
 	// Get the image.
 	log.Println("Downloading an image")
