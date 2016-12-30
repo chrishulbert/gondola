@@ -18,6 +18,9 @@ type OmdbMovie struct {
 	Director string
 	Actors   string
 	Plot     string
+}
+
+type OmdbResponse struct {
 	Response string
 }
 
@@ -33,13 +36,19 @@ func omdbRequest(title string, year *int) (OmdbMovie, error) {
 		return OmdbMovie{}, err
 	}
 
+	// Check it has the 'response="true"' field.
+	var r OmdbResponse
+	if err := json.Unmarshal(data, &r); err != nil {
+		return OmdbMovie{}, err
+	}
+	if r.Response != "True" {
+		return OmdbMovie{}, errors.New("No matching movie found in OMDB, you should either rename it or drop this movie file into 'other' instead of 'movies'")
+	}
+
 	// Parse it.
 	var m OmdbMovie
 	if err := json.Unmarshal(data, &m); err != nil {
 		return OmdbMovie{}, err
-	}
-	if m.Response != "True" {
-		return OmdbMovie{}, errors.New("No matching movie found in OMDB, you should either rename it or drop this movie file into 'other' instead of 'movies'")
 	}
 
 	return m, nil
