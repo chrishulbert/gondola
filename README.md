@@ -45,6 +45,25 @@ This allows you to disable the transcoding, which is useful to speed up dev.
 
 `debugSkipHLS = true`
 
+## File naming conventions
+
+When you dump a movie into the 'New/Movies' folder, the following will work:
+
+	* Big.Buck.Bunny.2008.1080p.blah.vob
+	* Big Buck Bunny 2008 1080p blah.vob
+	* Big.Buck.Bunny.vob
+
+If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search OMDB for the movie metadata.
+
+If it cannot find a year, it still searches OMDB to find the movie, but it stands less of a chance finding the correct movie if there's no year.
+
+For TV shows placed in `New/TV` folder, use the following:
+
+	* Some.TV.Show.S01E02.DVD.vob
+	* Some TV Show S01E02 Blah blah blah.vob
+
+So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's title is to the left, and ignores anything to the right. It then searches OMDB to find the show's metadata.
+
 ## Name
 
 The name is a tortured metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
