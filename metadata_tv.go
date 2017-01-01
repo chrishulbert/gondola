@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 const (
@@ -18,6 +19,14 @@ type EpisodeMetadata struct {
 	Season   int
 	Episode  int
 	Metadata *OmdbTVEpisode // This can be 'null' if OMDB didn't return info for this ep.
+}
+
+type BySeasonThenEpisode []EpisodeMetadata
+
+func (a BySeasonThenEpisode) Len() int      { return len(a) }
+func (a BySeasonThenEpisode) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a BySeasonThenEpisode) Less(i, j int) bool {
+	return a[i].Season*1000+a[i].Episode < a[j].Season*1000+a[j].Episode
 }
 
 /// Regenerates the list of episodes for the given show path.
@@ -59,7 +68,8 @@ func generateEpisodeList(showPath string, paths Paths) {
 		}
 	}
 
-	TODO sort
+	// Sort
+	sort.Sort(BySeasonThenEpisode(episodes))
 
 	// Save.
 	data, _ := json.Marshal(episodes)
@@ -74,6 +84,12 @@ type ShowMetadata struct {
 	Metadata interface{}
 	Episodes []interface{}
 }
+
+type ByName []ShowMetadata
+
+func (a ByName) Len() int           { return len(a) }
+func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByName) Less(i, j int) bool { return a[i].Image < a[j].Image }
 
 /// Regenerates the list of all tv shows.
 func generateShowList(paths Paths) {
@@ -118,7 +134,7 @@ func generateShowList(paths Paths) {
 		}
 	}
 
-	TODO sort
+	sort.Sort(ByName(shows))
 
 	// Save.
 	data, _ := json.MarshalIndent(shows, "", "    ")
