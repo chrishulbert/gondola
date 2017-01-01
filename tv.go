@@ -56,13 +56,11 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	os.MkdirAll(stagingOutputFolder, os.ModePerm)
 
 	// Get the episode metadata.
+	// This can fail if OMDB isn't up to date, which happens, in which case carry on.
 	omdbEpisode, omdbEpisodeErr := omdbRequestTVEpisode(omdbSeries.Title, season, episode)
 	if omdbEpisodeErr != nil {
 		log.Println("Failed to find OMDB episode data, error:", omdbEpisodeErr)
-		failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
-		os.Rename(inPath, failedPath)
-		os.RemoveAll(stagingOutputFolder) // Tidy up.
-		return omdbEpisodeErr
+		// Don't return, carry on.
 	} else {
 		// Save the OMDB metadata.
 		metadata, _ := json.Marshal(omdbEpisode)
@@ -98,11 +96,20 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 
 	// Success!
 	log.Println("Success! Removing original.")
-	goodTitle := fmt.Sprintf("S%02dE%02d %s", season, episode, sanitiseForFilesystem(omdbEpisode.Title))
+	goodTitle := tvFolderNameFor(season, episode, omdbEpisode.Title)
 	goodFolder := filepath.Join(showOutputFolder, goodTitle)
 	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
 	os.Remove(inPath)                          // Remove the original file.
 	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
 
 	return nil
+}
+
+// Makes the folder name for the given show.
+func tvFolderNameFor(season int, episode int, title string) string {
+	if title == "" {
+		return fmt.Sprintf("S%02dE%02d", season, episode)
+	} else {
+		return fmt.Sprintf("S%02dE%02d %s", season, episode, sanitiseForFilesystem(title))
+	}
 }
