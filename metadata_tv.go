@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const (
@@ -76,10 +78,52 @@ func generateEpisodeList(showPath string, paths Paths) {
 	outPath := filepath.Join(showPath, episodeListFilename)
 	ioutil.WriteFile(outPath, data, os.ModePerm)
 
+	generateEpisodeListHTML(showPath, episodes, paths)
+
 	log.Println("Successfully generated episode list")
 }
 
-TODO make index.html with links to each ep
+func generateEpisodeListHTML(showPath string, episodes []EpisodeMetadata, paths Paths) {
+	html := htmlStart
+	isLeft := true
+	trOpen := false
+
+	for _, episode := range episodes {
+		if isLeft {
+			html += "<tr>"
+			trOpen = true
+		}
+
+		linkPath, _ := filepath.Rel(showPath, filepath.Join(paths.Root, episode.Media))
+		imagePath, _ := filepath.Rel(showPath, filepath.Join(paths.Root, episode.Image))
+		name := fmt.Sprintf("S%02d E%02d", episode.Season, episode.Episode)
+		if episode.Metadata != nil {
+			name = name + " " + episode.Metadata.Title
+		}
+
+		h := htmlTd
+		h = strings.Replace(h, "LINK", linkPath, -1)
+		h = strings.Replace(h, "IMAGE", imagePath, -1)
+		h = strings.Replace(h, "NAME", name, -1)
+		html += h
+
+		if !isLeft {
+			html += "</tr>"
+			trOpen = false
+		}
+
+		isLeft = !isLeft
+	}
+
+	if trOpen {
+		html += "</tr>"
+	}
+	html += htmlEnd
+
+	// Save.
+	outPath := filepath.Join(showPath, indexHtml)
+	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
+}
 
 type ShowMetadata struct {
 	Image    string
