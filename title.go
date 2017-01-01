@@ -32,7 +32,7 @@ func titleAndYearFromFilename(file string) (string, *int) {
 
 func showSeasonEpisodeFromFile(file string) (string, int, int, error) {
 	// Try to figure out the year and title.
-	regex := regexp.MustCompile(`(.*)S(\d+)E(\d+)`)
+	regex := regexp.MustCompile(`(?i)(.*)S(\d+)E(\d+)`)
 	matches := regex.FindStringSubmatch(file)
 	if len(matches) >= 4 {
 		title := strings.TrimSpace(strings.Replace(matches[1], ".", " ", -1))
