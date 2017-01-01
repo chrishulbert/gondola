@@ -30,11 +30,11 @@ func isValidExtension(extension string) bool {
 
 // Scans the new paths, looking for any media files we're interested in.
 func scanNewPaths(paths Paths, config Config) {
-	scanNewPath(paths.NewMovies, paths, config)
-	scanNewPath(paths.NewTV, paths, config)
+	scanNewPath(paths.NewMovies, true, paths, config)
+	scanNewPath(paths.NewTV, false, paths, config)
 }
 
-func scanNewPath(whichPath string, paths Paths, config Config) {
+func scanNewPath(whichPath string, isMovies bool, paths Paths, config Config) {
 	files, err := ioutil.ReadDir(whichPath)
 	if err != nil {
 		log.Println("Couldn't scan path, error: ", err)
@@ -47,7 +47,7 @@ func scanNewPath(whichPath string, paths Paths, config Config) {
 				ext := path.Ext(file.Name())
 				if isValidExtension(ext) {
 					log.Println("Found file", file.Name())
-					tryProcess(whichPath, file.Name(), paths, config)
+					tryProcess(whichPath, file.Name(), isMovies, paths, config)
 				} else {
 					log.Println("Ignoring file with unexpected extension", file.Name())
 				}
@@ -59,10 +59,14 @@ func scanNewPath(whichPath string, paths Paths, config Config) {
 }
 
 // Tries processing a file. Doesn't worry if it can't, eg if the file is half-copied, as the completion of the copy will trigger another scan.
-func tryProcess(folder string, file string, paths Paths, config Config) {
+func tryProcess(folder string, file string, isMovies bool, paths Paths, config Config) {
 	source := filepath.Join(folder, file)
 	if canGetExclusiveAccessToFile(source) {
-		processMovie(folder, file, paths, config) // TODO TV!
+		if isMovies {
+			processMovie(folder, file, paths, config)
+		} else {
+			processTV(folder, file, paths, config)
+		}
 
 		// Re-generate.
 		generateMetadata(paths)

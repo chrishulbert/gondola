@@ -41,6 +41,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	// Get show pic if needed.
 	seriesImagePath := filepath.Join(showOutputFolder, imageFilename)
 	if _, err := os.Stat(seriesImagePath); os.IsNotExist(err) {
+		log.Println("Fetching show image for", omdbSeries.Title)
 		if image, err := imageForIMDB(omdbSeries.ImdbID); err == nil {
 			ioutil.WriteFile(seriesImagePath, image, os.ModePerm)
 		}
