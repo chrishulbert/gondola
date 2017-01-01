@@ -62,7 +62,7 @@ func imageForIMDB(IMDBId string) ([]byte, error) {
 
 	// Load the mediaviewer.
 	mvUrl := "http://www.imdb.com/title/" + IMDBId + "/mediaviewer/" + mediaIdMatches[1]
-	mvHtml, mvErr := download(url)
+	mvHtml, mvErr := download(mvUrl)
 	if mvErr != nil {
 		return nil, mvErr
 	}
