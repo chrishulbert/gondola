@@ -102,8 +102,9 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	os.Remove(inPath)                          // Remove the original file.
 	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
 
-	// Generate episodes metadata.
+	// Generate metadata.
 	generateEpisodeList(showOutputFolder, paths)
+	generateShowList(paths)
 
 	return nil
 }

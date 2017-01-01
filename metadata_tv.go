@@ -59,10 +59,69 @@ func generateEpisodeList(showPath string, paths Paths) {
 		}
 	}
 
+	TODO sort
+
 	// Save.
 	data, _ := json.Marshal(episodes)
 	outPath := filepath.Join(showPath, episodeListFilename)
 	ioutil.WriteFile(outPath, data, os.ModePerm)
 
 	log.Println("Successfully generated episode list")
+}
+
+type ShowMetadata struct {
+	Image    string
+	Metadata interface{}
+	Episodes []interface{}
+}
+
+/// Regenerates the list of all tv shows.
+func generateShowList(paths Paths) {
+
+	log.Println("Generating show list")
+
+	var shows []ShowMetadata
+
+	files, _ := ioutil.ReadDir(paths.TV) // Assume this works.
+	for _, fileInfo := range files {
+		if fileInfo.IsDir() {
+
+			showPath := filepath.Join(paths.TV, fileInfo.Name())
+
+			// Load the metadata.
+			metadataData, metadataErr := ioutil.ReadFile(filepath.Join(showPath, metadataFilename))
+			if metadataErr != nil {
+				continue
+			}
+			var metadata interface{}
+			if err := json.Unmarshal(metadataData, &metadata); err != nil {
+				continue
+			}
+
+			// Load the episodes.
+			episodesData, episodesErr := ioutil.ReadFile(filepath.Join(showPath, episodeListFilename))
+			if episodesErr != nil {
+				continue
+			}
+			var episodes []interface{}
+			if err := json.Unmarshal(episodesData, &episodes); err != nil {
+				continue
+			}
+
+			imagePath, _ := filepath.Rel(paths.Root, filepath.Join(showPath, imageFilename))
+			s := ShowMetadata{
+				Image:    imagePath,
+				Metadata: metadata,
+				Episodes: episodes,
+			}
+			shows = append(shows, s)
+		}
+	}
+
+	TODO sort
+
+	// Save.
+	data, _ := json.MarshalIndent(shows, "", "    ")
+	outPath := filepath.Join(paths.TV, metadataFilename)
+	ioutil.WriteFile(outPath, data, os.ModePerm)
 }
