@@ -58,11 +58,11 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	// Get the episode metadata.
 	omdbEpisode, omdbEpisodeErr := omdbRequestTVEpisode(omdbSeries.Title, season, episode)
 	if omdbEpisodeErr != nil {
-		log.Println("Failed to find OMDB episode data, error:", omdbErr)
+		log.Println("Failed to find OMDB episode data, error:", omdbEpisodeErr)
 		failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
 		os.Rename(inPath, failedPath)
 		os.RemoveAll(stagingOutputFolder) // Tidy up.
-		return omdbErr
+		return omdbEpisodeErr
 	} else {
 		// Save the OMDB metadata.
 		metadata, _ := json.Marshal(omdbEpisode)
