@@ -79,6 +79,8 @@ func generateEpisodeList(showPath string, paths Paths) {
 	log.Println("Successfully generated episode list")
 }
 
+TODO make index.html with links to each ep
+
 type ShowMetadata struct {
 	Image    string
 	Metadata interface{}

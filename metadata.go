@@ -56,8 +56,8 @@ const (
 
 	<table>`
 	htmlTd = `<td>
-				<a href="FOLDER/hls.m3u8">
-					<p><img src="FOLDER/image.jpg" /></p>
+				<a href="LINK">
+					<p><img src="IMAGE" /></p>
 					<p>NAME</p>
 				</a>
 			</td>`
@@ -82,20 +82,24 @@ func generateMetadata(paths Paths) error {
 	isLeft := true
 	trOpen := false
 
-	files, err := ioutil.ReadDir(paths.Movies)
-	if err != nil {
-		log.Println("Couldn't scan the folder to create the metadata")
-		return err
-	}
-
-	for _, fileInfo := range files {
+	// Movies.
+	movieFiles, _ := ioutil.ReadDir(paths.Movies)
+	for _, fileInfo := range movieFiles {
 		if fileInfo.IsDir() {
 			if isLeft {
 				html += "<tr>"
 				trOpen = true
 			}
-			relativePath := paths.MoviesRelativeToRoot + "/" + fileInfo.Name()
-			html += strings.Replace(strings.Replace(htmlTd, "FOLDER", relativePath, -1), "NAME", fileInfo.Name(), -1)
+
+			linkPath := paths.MoviesRelativeToRoot + "/" + fileInfo.Name() + "/" + hlsFilename
+			imagePath := paths.MoviesRelativeToRoot + "/" + fileInfo.Name() + "/" + imageFilename
+
+			h := htmlTd
+			h = strings.Replace(h, "LINK", linkPath, -1)
+			h = strings.Replace(h, "IMAGE", imagePath, -1)
+			h = strings.Replace(h, "NAME", fileInfo.Name(), -1)
+			html += h
+
 			if !isLeft {
 				html += "</tr>"
 				trOpen = false
@@ -104,6 +108,34 @@ func generateMetadata(paths Paths) error {
 			isLeft = !isLeft
 		}
 	}
+
+	// TV Shows.
+	tvFiles, _ := ioutil.ReadDir(paths.TV)
+	for _, fileInfo := range tvFiles {
+		if fileInfo.IsDir() {
+			if isLeft {
+				html += "<tr>"
+				trOpen = true
+			}
+
+			linkPath := paths.TVRelativeToRoot + "/" + fileInfo.Name()
+			imagePath := paths.TVRelativeToRoot + "/" + fileInfo.Name() + "/" + imageFilename
+
+			h := htmlTd
+			h = strings.Replace(h, "LINK", linkPath, -1)
+			h = strings.Replace(h, "IMAGE", imagePath, -1)
+			h = strings.Replace(h, "NAME", fileInfo.Name(), -1)
+			html += h
+
+			if !isLeft {
+				html += "</tr>"
+				trOpen = false
+			}
+
+			isLeft = !isLeft
+		}
+	}
+
 	if trOpen {
 		html += "</tr>"
 	}
