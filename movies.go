@@ -62,7 +62,7 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 
 	// Success!
 	log.Println("Success! Removing original.")
-	goodTitle := fileTitle + " " + omdbMovie.Year // TODO use the title from OMDB and filesystem-sanitise it.
+	goodTitle := sanitiseForFilesystem(omdbMovie.Title) + " " + omdbMovie.Year
 	goodFolder := filepath.Join(paths.Movies, goodTitle)
 	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
 	os.Remove(inPath)                          // Remove the original file.
