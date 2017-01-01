@@ -45,6 +45,14 @@ func download(url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+// Given a poster link from OMDB, gets the high-res version.
+func imageForPosterLink(link string) ([]byte, error) {
+	r := regexp.MustCompile(`@.*\.jpg`)
+	highResLink := r.ReplaceAllString(link, "@._V1_.jpg")
+	return download(highResLink)
+}
+
+// Deprecated, use imageForPosterLink.
 func imageForIMDB(IMDBId string) ([]byte, error) {
 	// Download the page.
 	url := "http://www.imdb.com/title" + IMDBId
