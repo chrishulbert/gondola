@@ -53,7 +53,7 @@ func imageForPosterLink(link string) ([]byte, error) {
 }
 
 // Deprecated, use imageForPosterLink.
-func imageForIMDB(IMDBId string) ([]byte, error) {
+func deprecatedImageForIMDB(IMDBId string) ([]byte, error) {
 	// Download the page.
 	url := "http://www.imdb.com/title" + IMDBId
 	html, err := download(url)
