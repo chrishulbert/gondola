@@ -119,7 +119,6 @@ func main() {
 	os.MkdirAll(paths.Failed, os.ModePerm)
 
 	// When starting, re-gen metadata and scan for new files.
-	generateMetadata(paths)
 	scanNewPaths(paths, config)
 
 	// Listen for changes on the folder.

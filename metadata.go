@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -75,7 +76,7 @@ const (
 
 func generateMetadata(paths Paths) error {
 
-	log.Println("Generating metadata files...")
+	log.Println("Generating metadata html...")
 
 	html := htmlStart
 	isLeft := true
@@ -115,7 +116,44 @@ func generateMetadata(paths Paths) error {
 	outPath := filepath.Join(paths.Root, indexHtml)
 	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
 
-	log.Println("Successfully generated metadata files")
+	log.Println("Successfully generated metadata html")
+
+	generateRootMetadata(paths)
 
 	return nil
+}
+
+type RootMetadata struct {
+	TVShows []interface{}
+	Movies  []interface{}
+}
+
+// Generates the root metadata.json
+func generateRootMetadata(paths Paths) {
+	log.Println("Generating root metadata json...")
+
+	var metadata RootMetadata
+
+	// Load tv metadata.
+	if data, err := ioutil.ReadFile(filepath.Join(paths.TV, metadataFilename)); err == nil {
+		var tv []interface{}
+		if err := json.Unmarshal(data, &tv); err == nil {
+			metadata.TVShows = tv
+		}
+	}
+
+	// Load movies metadata.
+	if data, err := ioutil.ReadFile(filepath.Join(paths.Movies, metadataFilename)); err == nil {
+		var m []interface{}
+		if err := json.Unmarshal(data, &m); err == nil {
+			metadata.Movies = m
+		}
+	}
+
+	// Save.
+	data, _ := json.MarshalIndent(metadata, "", "    ")
+	outPath := filepath.Join(paths.Root, metadataFilename)
+	ioutil.WriteFile(outPath, data, os.ModePerm)
+
+	log.Println("Successfully generated root metadata json")
 }
