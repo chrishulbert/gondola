@@ -37,7 +37,7 @@ wait until transfer has complete to begin importing it automatically.
 
 ## Config
 
-Configuration goes into ~/.gondola
+Configuration is compulsory, and goes into ~/.gondola
 
 It uses TOML format (same as windows INI files). Options include:
 
@@ -69,3 +69,50 @@ So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's 
 ## Name
 
 The name is a tortured metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
+
+## Installation
+
+* Buy a chip from [getchip.com](https://getchip.com/pages/store)
+* Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
+* Plug it into your TV and connect a USB keyboard (alternatively, connect to your computer via the USB port and connect to it via serial using eg screen)
+* Set it up for your wifi, [read more here](http://docs.getchip.com/chip.html#wifi-connection).
+	* nmcli device wifi list
+	* sudo nmcli device wifi connect '(your wifi network name/SSID)' password '(your wifi password)' ifname wlan0
+	* nmcli device status
+* Install zeroconf so you won't need to know its IP address:
+	* sudo apt-get update
+	* sudo apt-get install avahi-daemon
+* Then you can ssh in from your mac's terminal:
+	* ssh chip@chip
+TODO
+
+### Other tips
+
+Viewing logs:
+
+    sudo journalctl -u gondola
+
+Updating:
+
+    go get -u github.com/chrishulbert/gondola
+    sudo systemctl restart gondola
+
+Serial connection:
+
+To connect to the Chip via USB to your mac, do the following:
+
+* Disconnect it, if connected
+* Open the terminal
+* Do: ls -1 /dev | grep usb
+* Connect it
+* Repeat: ls -1 /dev | grep usb
+* See if there's a new device listed
+* Connect: screen /dev/cu.usbmodemFA133 115200 <- replace the device with whatever you noticed it to be.
+* Log in, do whatever you want to do.
+* To quit screen, do: control-a-control-\
+
+If screen fails because you quit without closing properly:
+Use fuser to find who has the port open and kill it:
+fuser /dev/cu.usbmodemFA133
+returns: /dev/cu.usbmodemFA133: 95401
+kill it: kill 95401
