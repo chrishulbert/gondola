@@ -114,6 +114,10 @@ Updating:
     go get -u github.com/chrishulbert/gondola
     sudo systemctl restart gondola
 
+If you manually move the files around, you can force a metadata re-generation by restarting:
+
+    sudo systemctl restart gondola
+
 Serial connection:
 
 To connect to the Chip via USB to your mac, do the following:

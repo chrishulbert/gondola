@@ -118,9 +118,11 @@ func main() {
 	os.MkdirAll(paths.TV, os.ModePerm)
 	os.MkdirAll(paths.Failed, os.ModePerm)
 
-	// When starting, re-gen metadata and scan for new files.
+	// When starting, re-gen metadata in case user manually moved stuff, and scan for new files.
+	generateShowList(paths) // TODO make it regen each show's episode list
+	generateMovieList(paths)
+	generateMetadata(paths)
 	scanNewPaths(paths, config)
-	generateMetadata(paths) // In case the user moved things around.
 
 	// Listen for changes on the folder.
 	folders := []string{paths.NewMovies, paths.NewTV}
