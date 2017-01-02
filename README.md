@@ -21,6 +21,7 @@ then serving it using nginx. This can take a very long time eg overnight, so the
 wait until transfer has complete to begin importing it automatically.
 * Great if you've got limited bandwidth and can't let your kids watch eg Netflix.
 * Much safer to have your kids watching your own library rather than randomly browsing Youtube - who knows what they'll come across.
+* Doesn't poll the 'new' folder for new files, instead listens for updates. So you can use a normal non-SSD external hard drive and it'll allow it to go to sleep.
 
 ## Drawbacks
 
@@ -74,7 +75,7 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 
 * Buy a chip from [getchip.com](https://getchip.com/pages/store)
 * Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
-* Plug it into your TV and connect a USB keyboard (alternatively, connect to your computer via the USB port and connect to it via serial using eg screen)
+* Plug it into your TV and connect a USB keyboard (alternatively, connect to your computer via the USB port and connect to it via serial using eg screen). Username and password default to 'chip'.
 * Set it up for your wifi, [read more here](http://docs.getchip.com/chip.html#wifi-connection).
 	* nmcli device wifi list
 	* sudo nmcli device wifi connect '(your wifi network name/SSID)' password '(your wifi password)' ifname wlan0
@@ -84,7 +85,23 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 	* sudo apt-get install avahi-daemon
 * Then you can ssh in from your mac's terminal:
 	* ssh chip@chip
-TODO
+* Once you can SSH in, you can disconnect it from the TV and plug it in to just a plain USB wall power adapter.
+* Connecting to the Chip's USB input limits it to pulling 500mA, because the Chip's designers didn't want it to short-circuit people's laptops by pulling too much current. But this means it cannot reliably power an external USB flash drive. You have three options here:
+	* You can use a powered USB hub.
+	* If you strip a (good quality) USB cable and connect to CHG-IN(+) and GND(-) on the Chip, it will pull more power. You'll need to plug into a good quality 10 Watt or 2 Amp power adaptor (such as an iPad charger).
+	* Use a battery backup for load spikes, I believe [this will plug directly into the Chip](https://www.sparkfun.com/products/8483).
+* Connect a large capacity USB drive to your Chip that you're happy to erase and reformat, and we'll configure it next.
+	* I recommend a big flash drive because they're cheap and silent and don't need to turn on/off (so no slow startups). But you can use a normal hard drive if you like.
+	* sudo mkdir /media/usb
+	* Next, we find the name of the device: sudo fdisk -l | grep Disk
+	* Look for some device with lots of GB's. It'll be lower than you expect because of decimal vs binary GB measurements. Mine is `/dev/sda`.
+	* TODO
+	
+TODO USB plugin
+* Add a configuration file:
+	* nano ~/.gondola
+	* Paste: `root = "/media/usb/Gondola"`, save and quit.
+
 
 ### Other tips
 
