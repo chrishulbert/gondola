@@ -19,6 +19,8 @@ then serving it using nginx. This can take a very long time eg overnight, so the
 * Seekable - because it pre-processes your media into HLS, which makes individual files for every few seconds, your media seeks perfectly (important for kids!).
 * Just drop your eg VOB files into a 'New' folder using eg [ForkLift](http://www.binarynights.com/Forklift/), and it'll 
 wait until transfer has complete to begin importing it automatically.
+* Great if you've got limited bandwidth and can't let your kids watch eg Netflix.
+* Much safer to have your kids watching your own library rather than randomly browsing Youtube - who knows what they'll come across.
 
 ## Drawbacks
 
