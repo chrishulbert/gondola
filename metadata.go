@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -68,6 +70,8 @@ const (
 		Gondola made with &hearts; by <a href="http://www.splinter.com.au">Chris Hulbert</a>
 		<br />
 		<a href="http://gondolamedia.com">gondolamedia.com</a>
+		<br />
+		<small><a href="javascript:alert('CAPACITY')">Usage</a></small>
 	</h3>
 
 </body>
@@ -140,9 +144,10 @@ func generateMetadata(paths Paths) error {
 		html += "</tr>"
 	}
 
-	html += htmlEnd
-
-	// TODO tv.
+	// Add the html trailer.
+	capacity := capacity(paths)
+	end := strings.Replace(htmlEnd, "CAPACITY", capacity, -1)
+	html += end
 
 	// Save.
 	outPath := filepath.Join(paths.Root, indexHtml)
@@ -150,21 +155,23 @@ func generateMetadata(paths Paths) error {
 
 	log.Println("Successfully generated metadata html")
 
-	generateRootMetadata(paths)
+	generateRootMetadata(paths, capacity)
 
 	return nil
 }
 
 type RootMetadata struct {
-	TVShows []interface{}
-	Movies  []interface{}
+	TVShows  []interface{}
+	Movies   []interface{}
+	Capacity string
 }
 
 // Generates the root metadata.json
-func generateRootMetadata(paths Paths) {
+func generateRootMetadata(paths Paths, capacity string) {
 	log.Println("Generating root metadata json...")
 
 	var metadata RootMetadata
+	metadata.Capacity = capacity
 
 	// Load tv metadata.
 	if data, err := ioutil.ReadFile(filepath.Join(paths.TV, metadataFilename)); err == nil {
@@ -188,4 +195,13 @@ func generateRootMetadata(paths Paths) {
 	ioutil.WriteFile(outPath, data, os.ModePerm)
 
 	log.Println("Successfully generated root metadata json")
+}
+
+/// Figure out how much disk space is left.
+func capacity(paths Paths) string {
+	cmd := exec.Command("df", "-h", paths.Root)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Run()
+	return strings.TrimSpace(out.String())
 }
