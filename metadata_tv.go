@@ -36,7 +36,7 @@ func generateEpisodeList(showPath string, paths Paths) {
 
 	log.Println("Generating episode list:", showPath)
 
-	var episodes []EpisodeMetadata
+	episodes := make([]EpisodeMetadata, 0)
 
 	files, _ := ioutil.ReadDir(showPath) // Assume this works.
 	for _, fileInfo := range files {

@@ -90,18 +90,20 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 	* You can use a powered USB hub.
 	* If you strip a (good quality) USB cable and connect to CHG-IN(+) and GND(-) on the Chip, it will pull more power. You'll need to plug into a good quality 10 Watt or 2 Amp power adaptor (such as an iPad charger).
 	* Use a battery backup for load spikes, I believe [this will plug directly into the Chip](https://www.sparkfun.com/products/8483).
+* Whichever option above you choose, ensure you use a quality usb power supply (eg an apple/samsung genuine one). The cheap ones have uneven voltages and don't supply the promised amps, and your hardware will be flaky as a result (random crashes / data corruption).
 * Connect a large capacity USB drive to your Chip that you're happy to erase and reformat, and we'll configure it next.
 	* I recommend a big flash drive because they're cheap and silent and don't need to turn on/off (so no slow startups). But you can use a normal hard drive if you like.
+	* We need to format it as EXT. FAT32 is limited to 4GB files which will be a limitation, and ExFat isn't supported on Chip without a kernel recompile. It's a pity we can't use APFS yet.
 	* sudo mkdir /media/usb
 	* Next, we find the name of the device: sudo fdisk -l | grep Disk
 	* Look for some device with lots of GB's. It'll be lower than you expect because of decimal vs binary GB measurements. Mine is `/dev/sda`.
 	* TODO
-	
+
 TODO USB plugin
 * Add a configuration file:
 	* nano ~/.gondola
 	* Paste: `root = "/media/usb/Gondola"`, save and quit.
-
+* Open [http://chip](http://chip) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and try it out!
 
 ### Other tips
 

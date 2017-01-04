@@ -22,7 +22,7 @@ func (a ByTitle) Less(i, j int) bool { return a[i].Metadata.Title < a[j].Metadat
 
 /// Regenerates the list of all movies.
 func generateMovieList(paths Paths) {
-	var movies []MovieMetadata
+	movies := make([]MovieMetadata, 0)
 
 	files, _ := ioutil.ReadDir(paths.Movies) // Assume this works.
 	for _, fileInfo := range files {
