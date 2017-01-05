@@ -176,9 +176,22 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 	* `sudo systemctl start gondola` <- make it start now
 	* `systemctl status gondola` <- it should be 'active (running)'
 	* `sudo journalctl -u gondola` <- view its logs, should say 'watching for changes'
-	
+* Install Nginx:
+	* `sudo apt-get install nginx`
+	* `sudo nano /etc/nginx/sites-available/default`
+		* Find 'root' and change line to: `root /media/usb/Gondola`
+	* `sudo nginx -s reload` <- restart nginx.
+	* Open [http://gondola](http://gondola) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and you should see something!
+* Upload your first media:
+	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc.
+	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola; Username: chip; Password: chip; Remote path: /media/usb/Gondola
+	* Connect, and drop something into `New/TV` or `New/Movies`, as per the file naming conventions described elsewhere here.
+	* Check the logs on your Chip using `sudo journalctl -u gondola`.
+	* Have a look in the `Gondola/Staging` folder while it works.
+	* Wait a (long) while for it to convert...
+	* Open [http://gondola](http://gondola) in Safari and you should be golden!
 
-* Open [http://chip](http://chip) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and try it out!
+Good luck.
 
 ### Other tips
 
