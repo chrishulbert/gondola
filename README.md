@@ -186,9 +186,10 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc.
 	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola; Username: chip; Password: chip; Remote path: /media/usb/Gondola
 	* Connect, and drop something into `New/TV` or `New/Movies`, as per the file naming conventions described elsewhere here.
-	* Check the logs on your Chip using `sudo journalctl -u gondola`.
+	* Check the logs on your Chip using `sudo journalctl -u gondola | tail`.
 	* Have a look in the `Gondola/Staging` folder while it works.
-	* Wait a (long) while for it to convert...
+	* Wait a (long) while for it to convert... For an idea, a 2 hour 1080p movie took over a day.
+	* While it's converting you can use `top` to see that ffmpeg is hogging the CPU. Once it disappears from top, you'll know it's done.
 	* Open [http://gondola](http://gondola) in Safari and you should be golden!
 
 Good luck.
