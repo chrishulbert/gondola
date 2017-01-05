@@ -1,7 +1,5 @@
 # Gondola
 
-*Note that this project isn't in a usable state yet*
-
 Sick of your kids' DVD's getting scratched and unusable?
 
 Gondola is a media center that is designed to work from a cheap+silent single board computer (SBC) like
