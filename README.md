@@ -75,52 +75,129 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 
 * Buy a chip from [getchip.com](https://getchip.com/pages/store)
 * Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
-* Plug it into your TV and connect a USB keyboard (alternatively, connect to your computer via the USB port and connect to it via serial using eg screen). Username and password default to 'chip'.
+* Plug it into your TV and connect a USB keyboard (alternatively, connect to your computer via the USB port and connect to it via serial using eg screen - this can be less reliable IME than connecting to TV). Username and password default to 'chip'.
+* Change the hostname to 'gondola':
+	* sudo nano /etc/hostname <- change 'chip' to 'gondola'
+	* sudo nano /etc/hosts <- change 'chip' to 'gondola'
+	* sudo reboot
 * Set it up for your wifi, [read more here](http://docs.getchip.com/chip.html#wifi-connection).
 	* nmcli device wifi list
 	* sudo nmcli device wifi connect '(your wifi network name/SSID)' password '(your wifi password)' ifname wlan0
+	* Eg `sudo nmcli device wifi connect 'MyWifi' password 'MyPassword' ifname wlan0`
 	* nmcli device status
-* Install zeroconf so you won't need to know its IP address:
-	* sudo apt-get update
-	* sudo apt-get install avahi-daemon
 * Then you can ssh in from your mac's terminal:
-	* ssh chip@chip
-* Once you can SSH in, you can disconnect it from the TV and plug it in to just a plain USB wall power adapter.
-* Connecting to the Chip's USB input limits it to pulling 500mA, because the Chip's designers didn't want it to short-circuit people's laptops by pulling too much current. But this means it cannot reliably power an external USB flash drive. You have three options here:
-	* You can use a powered USB hub.
+	* `ssh chip@gondola`
+	* If it didn't work, go back to the tv/serial, and install zeroconf so you won't need to know its IP address:
+		* sudo apt-get update
+		* sudo apt-get install avahi-daemon
+* Once you can SSH in, you can disconnect it from the TV/Mac (for serial-over-usb) and plug it in to just a plain USB wall power adapter.
+* Connecting to the Chip's USB input limits it to pulling 500mA, because the Chip's designers didn't want it to short-circuit people's laptops by pulling too much current. But this means it cannot reliably power an external USB flash drive. You have some options here:
+	* You can use a powered USB hub to supply power to your storage drive.
 	* If you strip a (good quality) USB cable and connect to CHG-IN(+) and GND(-) on the Chip, it will pull more power. You'll need to plug into a good quality 10 Watt or 2 Amp power adaptor (such as an iPad charger).
+	* You can also try the 'no limit' version of the Chip OS on flash.getchip.com, for the same effect as the above option without stripping wires - I haven't tried this.
 	* Use a battery backup for load spikes, I believe [this will plug directly into the Chip](https://www.sparkfun.com/products/8483).
-* Whichever option above you choose, ensure you use a quality usb power supply (eg an apple/samsung genuine one). The cheap ones have uneven voltages and don't supply the promised amps, and your hardware will be flaky as a result (random crashes / data corruption).
-* Connect a large capacity USB drive to your Chip that you're happy to erase and reformat, and we'll configure it next.
+* Whichever option above you choose, ensure you use a quality usb power supply (eg an apple/samsung genuine one). The cheap ones have uneven voltages and don't supply the promised amps, and your hardware will be flaky as a result (random crashes / data corruption). Also make sure you use a good quality USB cable, because the cheap ones don't have thick enough copper to deliver the necessary amps.
+* Connect a large capacity USB drive to your Chip that you're happy to erase and reformat, and we'll configure it next. Make sure you've addressed your power sourcing in the steps above before you connect a drive or you'll get brownouts.
+* Formatting steps:
 	* I recommend a big flash drive because they're cheap and silent and don't need to turn on/off (so no slow startups). But you can use a normal hard drive if you like.
 	* We need to format it as EXT. FAT32 is limited to 4GB files which will be a limitation, and ExFat isn't supported on Chip without a kernel recompile. It's a pity we can't use APFS yet.
-	* sudo mkdir /media/usb
-	* Next, we find the name of the device: sudo fdisk -l | grep Disk
+	* Find the name of the device: `sudo fdisk -l | grep Disk`
 	* Look for some device with lots of GB's. It'll be lower than you expect because of decimal vs binary GB measurements. Mine is `/dev/sda`.
-	* TODO
+	* If you like, you can use `sudo fdisk -l /dev/sda` (replace sda with whatever you discovered above) to see all the partitions currently on your USB drive. There's probably a FAT one.
+	* We need to make a new partition table next:
+		* `sudo fdisk /dev/sda` <- replace sda with whatever you discovered above.
+		* `g` <- creates a gpt partition table
+		* `n` <- creates a new partition. Accept all the defaults by hitting return a few times.
+		* `p` <- prints the details, it should look like this, note the device name:
 
-TODO USB plugin
-* Add a configuration file:
-	* nano ~/.gondola
-	* Paste: `root = "/media/usb/Gondola"`, save and quit.
+	Disk /dev/sda: 57.8 GiB, 62087233536 bytes, 121264128 sectors
+	Units: sectors of 1 * 512 = 512 bytes
+	Sector size (logical/physical): 512 bytes / 512 bytes
+	I/O size (minimum/optimal): 512 bytes / 512 bytes
+	Disklabel type: gpt
+	Disk identifier: C7C3585E-CFC5-4A36-B61D-6B3B880F06DC
+
+	Device     Start       End   Sectors  Size Type
+	/dev/sda1   2048 121264094 121262047 57.8G Linux filesystem
+
+		* `w` <- to write and exit
+	* You should now be back at the normal command prompt.
+	* Format it to EXT format like so: `sudo mkfs.ext4 /dev/sda1` <- replacing sda1 with whatever is above.
+* Mounting steps:
+	* `sudo mkdir /media/usb` <- creates a 'mount point'
+	* `sudo chown chip /media/usb` <- allow chip to write to it.
+	* `sudo chgrp chip /media/usb`
+	* `sudo nano /etc/fstab`
+		* Add the line `/dev/sda1 /media/usb ext4 defaults 0 0` <- replace /dev/sda1 with whatever is above.
+	* Mount it automatically now: `sudo mount -a`
+	* Test it worked: `mount | grep usb`
+* Now install ffmpeg:
+	* `sudo apt-get install ffmpeg`
+* Install go:
+	* `sudo apt-get install git`
+	* You'll need latest golang, the normal version won't compile with this error: `No such file or directory: textflag.h`
+		* `sudo nano /etc/apt/sources.list`
+			* Add a line: `deb http://httpredir.debian.org/debian experimental main`
+			* Add a line: `deb http://httpredir.debian.org/debian unstable main`
+		* `sudo apt-get update`
+		* `sudo apt-get install golang`
+		* It might pop up a blue screen asking to restart some service, just select yes.
+	* `nano ~/.bash_profile`
+		* add `export GOPATH=$HOME/go`
+	* `source ~/.bash_profile` <- reload the profile
+	* `env | grep go` <- test it worked
+* Allow password-less sudo access to `lsof` so Gondola can use it to determine when uploads are complete:
+	* `sudo apt-get install lsof` <- If lsof isn't already installed.
+	* `sudo visudo -f /etc/sudoers.d/lsof`
+		* add `chip ALL = (root) NOPASSWD: /usr/bin/lsof`
+* Now we can install Gondola:
+	* `go get github.com/chrishulbert/gondola`
+	* Add a configuration file:
+		* `nano ~/.gondola`
+		* Paste: `root = "/media/usb/Gondola"`, save and quit.
+	* Test it: `~/go/bin/gondola` <- it should say 'Watching for changes'. Do Ctrl+C to close.
+* Make it run as a service:
+	* `sudo nano /lib/systemd/system/gondola.service`
+	* Paste the following:
+
+	[Unit]
+	Description=Gondola media server
+
+	[Service]
+	PIDFile=/tmp/gondola.pid
+	User=chip
+	Group=chip
+	ExecStart=/home/chip/go/bin/gondola
+
+	[Install]
+	WantedBy=multi-user.target
+
+	* `sudo systemctl enable gondola` <- make it run on boot
+	* `sudo systemctl start gondola` <- make it start now
+	* `systemctl status gondola` <- it should be 'active (running)'
+	* `sudo journalctl -u gondola` <- view its logs, should say 'watching for changes'
+	
+
 * Open [http://chip](http://chip) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and try it out!
 
 ### Other tips
 
-Viewing logs:
+#### Viewing logs:
 
     sudo journalctl -u gondola
 
-Updating:
+#### Updating:
 
     go get -u github.com/chrishulbert/gondola
     sudo systemctl restart gondola
+
+#### Re-generating:
 
 If you manually move the files around, you can force a metadata re-generation by restarting:
 
     sudo systemctl restart gondola
 
-Serial connection:
+#### Serial connection:
 
 To connect to the Chip via USB to your mac, do the following:
 
@@ -128,6 +205,7 @@ To connect to the Chip via USB to your mac, do the following:
 * Open the terminal
 * Do: ls -1 /dev | grep usb
 * Connect it
+* Wait a minute or two
 * Repeat: ls -1 /dev | grep usb
 * See if there's a new device listed
 * Connect: screen /dev/cu.usbmodemFA133 115200 <- replace the device with whatever you noticed it to be.
@@ -139,3 +217,7 @@ Use fuser to find who has the port open and kill it:
 fuser /dev/cu.usbmodemFA133
 returns: /dev/cu.usbmodemFA133: 95401
 kill it: kill 95401
+
+#### Docker:
+
+I've tried to make this work with Docker, however Gondola needs root access to detect if any other processes are writing to files in the New folder, so I don't recommend spending time investigating this unless you find a solution to that.
