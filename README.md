@@ -129,8 +129,6 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 		* Add the line `/dev/sda1 /media/usb ext4 defaults 0 0` <- replace /dev/sda1 with whatever is above.
 	* Mount it automatically now: `sudo mount -a`
 	* Test it worked: `mount | grep usb`
-* Now install ffmpeg:
-	* `sudo apt-get install ffmpeg`
 * Install go:
 	* `sudo apt-get install git`
 	* You'll need latest golang, the normal version won't compile with this error: `No such file or directory: textflag.h`
@@ -148,6 +146,8 @@ The name is a tortured metaphor: A real gondola transports you down a stream; th
 	* `sudo apt-get install lsof` <- If lsof isn't already installed.
 	* `sudo visudo -f /etc/sudoers.d/lsof`
 		* add `chip ALL = (root) NOPASSWD: /usr/bin/lsof`
+* Now install ffmpeg:
+	* `sudo apt-get install ffmpeg`
 * Now we can install Gondola:
 	* `go get github.com/chrishulbert/gondola`
 	* Add a configuration file:
