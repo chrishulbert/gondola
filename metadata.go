@@ -72,6 +72,13 @@ const (
 		<a href="http://gondolamedia.com">gondolamedia.com</a>
 		<br />
 		<small><a href="javascript:alert('CAPACITY')">Usage</a></small>
+		<br />
+		<br />
+		<small>This product uses the <a href="https://www.themoviedb.org">TMDb</a> API but is not endorsed or certified by TMDb.</small>
+		<br />
+		<img src="https://www.themoviedb.org/assets/9b3f9c24d9fd5f297ae433eb33d93514/images/v4/logos/408x161-powered-by-rectangle-green.png" 
+			onload="this.width/=2;this.onload=null;" 
+			alt="TMDb" />
 	</h3>
 
 </body>
