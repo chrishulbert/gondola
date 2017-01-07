@@ -6,6 +6,7 @@ import (
 
 type TmdbTvShowDetails struct {
 	Id           int
+	Name         string
 	Overview     string
 	BackdropPath string `json:"backdrop_path"`
 	PosterPath   string `json:"poster_path"`
@@ -22,9 +23,9 @@ type TmdbTvShowGenre struct {
 }
 
 // Finds the tv show details.
-func requestTmdbTVDetails(id int) (TmdbTvShowDetails, error) {
+func requestTmdbTVShowDetails(id int) (TmdbTvShowDetails, []byte, error) {
 	url := tmdbApiRoot + "tv/" + strconv.Itoa(id) + "?api_key=" + tmdbApiKey
 	var results TmdbTvShowDetails
-	err := tmdbDownloadParse(url, &results)
-	return results, err
+	data, err := tmdbDownloadParse(url, &results)
+	return results, data, err
 }

@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	validExtensions  = "mp4 mkv vob avi mpg m4v"
-	imageFilename    = "image.jpg"
-	metadataFilename = "metadata.json"
-	hlsFilename      = "hls.m3u8"
+	validExtensions       = "mp4 mkv vob avi mpg m4v"
+	imageFilename         = "image.jpg"
+	imageBackdropFilename = "backdrop.jpg"
+	metadataFilename      = "metadata.json"
+	hlsFilename           = "hls.m3u8"
 )
 
 // Returns true if it's an extension we're interested in.

@@ -17,7 +17,7 @@ type TmdbTvSearchResult struct {
 func requestTmdbTVSearch(title string) (int, error) {
 	url := tmdbApiRoot + "search/tv?api_key=" + tmdbApiKey + "&query=" + url.QueryEscape(title)
 	var results TmdbTvSearchResults
-	if err := tmdbDownloadParse(url, &results); err != nil {
+	if _, err := tmdbDownloadParse(url, &results); err != nil {
 		return 0, err
 	}
 

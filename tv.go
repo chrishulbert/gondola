@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -25,64 +24,60 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	}
 
 	// Get and save the show data. This has to happen for every episode so we can get the proper title name.
-	omdbSeries, omdbErr := omdbRequestTVSeries(showTitleFromFile)
-	if omdbErr != nil {
-		log.Println("Could not get OMDB metadata for", showTitleFromFile)
+
+	// Search for the id.
+	tmdbId, tmdbIdErr := requestTmdbTVSearch(showTitleFromFile)
+	if tmdbIdErr != nil {
+		log.Println("Could not find TV show for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		return omdbErr
-	}
-	showOutputFolder := filepath.Join(paths.TV, sanitiseForFilesystem(omdbSeries.Title))
-	os.MkdirAll(showOutputFolder, os.ModePerm)
-	seriesMetadata, _ := json.Marshal(omdbSeries)
-	seriesMetadataPath := filepath.Join(showOutputFolder, metadataFilename)
-	ioutil.WriteFile(seriesMetadataPath, seriesMetadata, os.ModePerm)
-
-	// Get show pic if needed.
-	seriesImagePath := filepath.Join(showOutputFolder, imageFilename)
-	if _, err := os.Stat(seriesImagePath); os.IsNotExist(err) {
-		log.Println("Fetching show image for", omdbSeries.Title)
-		image, imageErr := imageForPosterLink(omdbSeries.Poster)
-		if imageErr == nil {
-			log.Println("Downloaded show image")
-			ioutil.WriteFile(seriesImagePath, image, os.ModePerm)
-		} else {
-			log.Println("Couldn't download image:", imageErr)
-		}
+		return tmdbIdErr
 	}
 
-	// Make the temporary output folder.
-	stagingOutputFolder := filepath.Join(paths.Staging, file)
-	os.MkdirAll(stagingOutputFolder, os.ModePerm)
-
-	// Get the episode metadata.
-	// This can fail if OMDB isn't up to date, which happens, in which case carry on.
-	omdbEpisode, omdbEpisodeErr := omdbRequestTVEpisode(omdbSeries.Title, season, episode)
-	if omdbEpisodeErr != nil {
-		log.Println("Failed to find OMDB episode data, error:", omdbEpisodeErr)
-		// Don't return, carry on.
-	} else {
-		// Save the OMDB metadata.
-		metadata, _ := json.Marshal(omdbEpisode)
-		metadataPath := filepath.Join(stagingOutputFolder, metadataFilename)
-		ioutil.WriteFile(metadataPath, metadata, os.ModePerm)
+	// Get show details.
+	tmdbSeries, tmdbSeriesData, tmdbSeriesErr := requestTmdbTVShowDetails(tmdbId)
+	if tmdbSeriesErr != nil {
+		log.Println("Could not get TV show metadata for", showTitleFromFile)
+		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+		os.Rename(inPath, failedPath)
+		return tmdbSeriesErr
 	}
 
-	// Get the episode image.
-	if omdbEpisode.Poster != "" {
-		log.Println("Downloading an episode image")
-		imageData, imageErr := imageForPosterLink(omdbEpisode.Poster)
-		if imageErr != nil {
-			log.Println("Couldn't download the image", omdbEpisode.Title, imageErr)
-		} else {
-			// Save the image.
-			imagePath := filepath.Join(stagingOutputFolder, imageFilename)
-			ioutil.WriteFile(imagePath, imageData, os.ModePerm)
-		}
+	// Get season details.
+	tmdbSeason, tmdbSeasonData, tmdbSeasonErr := requestTmdbTVSeason(id, season)
+	if tmdbSeasonErr != nil {
+		log.Println("Could not get season metadata for", showTitleFromFile)
+		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+		os.Rename(inPath, failedPath)
+		return tmdbSeasonErr
 	}
+
+	// Get episode details.
+	tmdbEpisode, tmdbEpisodeData, tmdbEpisodeErr := requestTmdbTVEpisode(id, season, episode)
+	if tmdbEpisodeErr != nil {
+		log.Println("Could not get episode metadata for", showTitleFromFile)
+		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+		os.Rename(inPath, failedPath)
+		return tmdbEpisodeErr
+	}
+
+	// Write the details.
+	showFolder := filepath.Join(paths.TV, sanitiseForFilesystem(tmdbSeries.Name))
+	seasonFolder := filepath.Join(showFolder, fmt.Sprintf("Season %d", season))
+	episodeFolder := filepath.Join(seasonFolder, tvFolderNameFor(season, episode, tmdbEpisode.Name))
+	os.MkdirAll(episodeFolder, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
+
+	// Get pics if needed.
+	getImageIfNeeded(tmdbSeries.PosterPath, "w780", showFolder, imageFilename)
+	getImageIfNeeded(tmdbSeries.BackdropPath, "w1280", showFolder, imageBackdropFilename)
+	getImageIfNeeded(tmdbSeason.PosterPath, "w780", seasonFolder, imageFilename)
+	getImageIfNeeded(tmdbEpisode.StillPath, "w300", episodeFolder, imageFilename)
 
 	// Convert it.
-	outPath := filepath.Join(stagingOutputFolder, hlsFilename)
+	outPath := filepath.Join(episodeFolder, hlsFilename)
 	convertErr := convertToHLSAppropriately(inPath, outPath, config)
 
 	// Fail! Move it to the failed folder.
@@ -90,17 +85,14 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 		log.Println("Failed to convert", file, "; moving to the Failed folder, err:", convertErr)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		os.RemoveAll(stagingOutputFolder) // Tidy up.
+		os.RemoveAll(episodeFolder) // Tidy up.
 		return errors.New("Couldn't convert " + file)
 	}
 
 	// Success!
+	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it and would prefer to save the space.
 	log.Println("Success! Removing original.")
-	goodTitle := tvFolderNameFor(season, episode, omdbEpisode.Title)
-	goodFolder := filepath.Join(showOutputFolder, goodTitle)
-	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
-	os.Remove(inPath)                          // Remove the original file.
-	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
+	os.Remove(inPath)
 
 	// Generate metadata.
 	generateEpisodeList(showOutputFolder, paths)

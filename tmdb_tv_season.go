@@ -14,11 +14,11 @@ type TmdbTvSeasonDetails struct {
 }
 
 // Finds the tv show details for one season.
-func requestTmdbTVSeason(id int, season int) (TmdbTvSeasonDetails, error) {
+func requestTmdbTVSeason(id int, season int) (TmdbTvSeasonDetails, []byte, error) {
 	url := tmdbApiRoot + "tv/" + strconv.Itoa(id) +
 		"/season/" + strconv.Itoa(season) +
 		"?api_key=" + tmdbApiKey
 	var results TmdbTvSeasonDetails
-	err := tmdbDownloadParse(url, &results)
-	return results, err
+	data, err := tmdbDownloadParse(url, &results)
+	return results, data, err
 }
