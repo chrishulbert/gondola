@@ -1,0 +1,37 @@
+{
+	"TVShows": [
+		{
+			"TMDBId": 4956,
+			"Name": "Dilbert",
+			"Overview": "Dilbert is an animated television series adaptation...",
+			"Image": "TV/Dilbert/image.jpg",
+			"Backdrop": "TV/Dilbert/backdrop.jpg",
+			"FirstAirDate": "1990-01-02",
+			"LastAirDate":  "1999-01-02",
+			"Seasons": [
+				{
+					"TMDBId": 3629,
+					"Season": 1,
+					"Name": "Season 1",
+					"Overview": "Season 1 of Dilbert blah blah..."
+					"Image": "TV/Dilbert/Season 1/image.jpg",
+					"AirDate": "1990-01-02",
+					"Episodes": [
+						{
+							"TMDBId": 63104,
+							"Episode": 1,
+							"Name": "The Seinfeld Chronicles",
+							"Overview": "The very first episode. Jerry is ecstatic that a woman he met...",
+							"Image": "TV/Dilbert/Season 1/S01E01 The Seinfeld Chronicles/image.jpg",
+							"AirDate": "1990-01-02",
+							"ProductionCode": "101ABC",
+							"Vote": 7.23,
+						}
+					]
+				}
+			]
+		}
+	],
+	"Movies": [
+	]
+}

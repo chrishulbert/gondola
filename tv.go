@@ -44,7 +44,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	}
 
 	// Get season details.
-	tmdbSeason, tmdbSeasonData, tmdbSeasonErr := requestTmdbTVSeason(id, season)
+	tmdbSeason, tmdbSeasonData, tmdbSeasonErr := requestTmdbTVSeason(tmdbId, season)
 	if tmdbSeasonErr != nil {
 		log.Println("Could not get season metadata for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
@@ -53,7 +53,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	}
 
 	// Get episode details.
-	tmdbEpisode, tmdbEpisodeData, tmdbEpisodeErr := requestTmdbTVEpisode(id, season, episode)
+	tmdbEpisode, tmdbEpisodeData, tmdbEpisodeErr := requestTmdbTVEpisode(tmdbId, season, episode)
 	if tmdbEpisodeErr != nil {
 		log.Println("Could not get episode metadata for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
@@ -68,7 +68,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	os.MkdirAll(episodeFolder, os.ModePerm)
 	ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
 	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
-	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(episodeFolder, metadataFilename), tmdbEpisodeData, os.ModePerm)
 
 	// Get pics if needed.
 	getImageIfNeeded(tmdbSeries.PosterPath, "w780", showFolder, imageFilename)
