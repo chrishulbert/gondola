@@ -95,8 +95,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	os.Remove(inPath)
 
 	// Generate metadata.
-	generateEpisodeList(showOutputFolder, paths)
-	generateShowList(paths)
+	generateMetadata(paths)
 
 	return nil
 }

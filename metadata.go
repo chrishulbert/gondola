@@ -1,20 +1,26 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 )
 
 type Metadata struct {
-	TVShows  []interface{}
-	Movies   []interface{}
+	TVShows  []TVShowMetadata
+	Movies   []MovieMetadata
 	Capacity string
+}
+
+type MovieMetadata struct {
+	// TODO
 }
 
 type TVShowMetadata struct {
@@ -52,7 +58,7 @@ type TVEpisodeMetadata struct {
 
 // Generates metadata for everything.
 func generateMetadata(paths Paths) {
-	log.Println("Generating TV metadata")
+	log.Println("Generating metadata")
 
 	shows := make([]TVShowMetadata, 0)
 	for _, showFolder := range directoriesIn(paths.TV) {
@@ -120,7 +126,7 @@ func generateMetadata(paths Paths) {
 			generateSeasonHTML(seasonFolder, season, paths)
 		}
 		sort.Sort(BySeason(show.Seasons))
-		generateShowHTML(showFolder, show, paths) {
+		generateShowHTML(showFolder, show, paths)
 	}
 
 	// Make the root metadata.
@@ -134,6 +140,8 @@ func generateMetadata(paths Paths) {
 	// Save.
 	data, _ := json.MarshalIndent(metadata, "", "    ")
 	ioutil.WriteFile(filepath.Join(paths.Root, metadataFilename), data, os.ModePerm)
+
+	generateRootHTML(capacity, paths)
 }
 
 // List of full directories (eg path + name).
@@ -146,6 +154,7 @@ func directoriesIn(path string) []string {
 			directories = append(directories, directory)
 		}
 	}
+	return directories
 }
 
 func readAndUnmarshal(folder string, file string, v interface{}) error {
@@ -189,7 +198,7 @@ func generateSeasonHTML(seasonPath string, season TVSeasonMetadata, paths Paths)
 
 		linkPath, _ := filepath.Rel(seasonPath, filepath.Join(paths.Root, episode.Media))
 		imagePath, _ := filepath.Rel(seasonPath, filepath.Join(paths.Root, episode.Image))
-		name := fmt.Sprintf("S%02d E%02d", season.Season, episode.Episode, episode.Name)
+		name := fmt.Sprintf("S%02d E%02d %s", season.Season, episode.Episode, episode.Name)
 
 		h := htmlTd
 		h = strings.Replace(h, "LINK", linkPath, -1)
@@ -212,6 +221,79 @@ func generateSeasonHTML(seasonPath string, season TVSeasonMetadata, paths Paths)
 
 	// Save.
 	outPath := filepath.Join(seasonPath, indexHtml)
+	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
+}
+
+/// Generates the root index.html
+func generateRootHTML(capacity string, paths Paths) {
+	html := htmlStart
+	isLeft := true
+	trOpen := false
+
+	// Movies.
+	movieFiles, _ := ioutil.ReadDir(paths.Movies)
+	for _, fileInfo := range movieFiles {
+		if fileInfo.IsDir() {
+			if isLeft {
+				html += "<tr>"
+				trOpen = true
+			}
+
+			linkPath := paths.MoviesRelativeToRoot + "/" + fileInfo.Name() + "/" + hlsFilename
+			imagePath := paths.MoviesRelativeToRoot + "/" + fileInfo.Name() + "/" + imageFilename
+
+			h := htmlTd
+			h = strings.Replace(h, "LINK", linkPath, -1)
+			h = strings.Replace(h, "IMAGE", imagePath, -1)
+			h = strings.Replace(h, "NAME", fileInfo.Name(), -1)
+			html += h
+
+			if !isLeft {
+				html += "</tr>"
+				trOpen = false
+			}
+
+			isLeft = !isLeft
+		}
+	}
+
+	// TV Shows.
+	tvFiles, _ := ioutil.ReadDir(paths.TV)
+	for _, fileInfo := range tvFiles {
+		if fileInfo.IsDir() {
+			if isLeft {
+				html += "<tr>"
+				trOpen = true
+			}
+
+			linkPath := paths.TVRelativeToRoot + "/" + fileInfo.Name()
+			imagePath := paths.TVRelativeToRoot + "/" + fileInfo.Name() + "/" + imageFilename
+
+			h := htmlTd
+			h = strings.Replace(h, "LINK", linkPath, -1)
+			h = strings.Replace(h, "IMAGE", imagePath, -1)
+			h = strings.Replace(h, "NAME", fileInfo.Name(), -1)
+			html += h
+
+			if !isLeft {
+				html += "</tr>"
+				trOpen = false
+			}
+
+			isLeft = !isLeft
+		}
+	}
+
+	if trOpen {
+		html += "</tr>"
+	}
+
+	// Add the html trailer.
+	end := strings.Replace(htmlEnd, "CAPACITY", capacity, -1)
+	html += end
+
+	// Save.
+	outPath := filepath.Join(paths.Root, indexHtml)
 	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
 }
 
@@ -251,7 +333,7 @@ func generateShowHTML(showPath string, show TVShowMetadata, paths Paths) {
 	html += htmlEnd
 
 	// Save.
-	outPath := filepath.Join(seasonPath, indexHtml)
+	outPath := filepath.Join(showPath, indexHtml)
 	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
 }
 
