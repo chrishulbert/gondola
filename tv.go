@@ -63,7 +63,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 
 	// Write the details.
 	showFolder := filepath.Join(paths.TV, sanitiseForFilesystem(tmdbSeries.Name))
-	seasonFolder := filepath.Join(showFolder, fmt.Sprintf("Season %d", season))
+	seasonFolder := filepath.Join(showFolder, tvSeasonFolderNameFor(season))
 	episodeFolder := filepath.Join(seasonFolder, tvFolderNameFor(season, episode, tmdbEpisode.Name))
 	os.MkdirAll(episodeFolder, os.ModePerm)
 	ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
@@ -99,6 +99,10 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	generateShowList(paths)
 
 	return nil
+}
+
+func tvSeasonFolderNameFor(season int) string {
+	return fmt.Sprintf("Season %d", season)
 }
 
 // Makes the folder name for the given show.

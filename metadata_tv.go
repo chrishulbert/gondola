@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+type Metadata struct {
+	TVShows  []interface{}
+	Movies   []interface{}
+	Capacity string
+}
+
 type TVShowMetadata struct {
 	TMDBId       int
 	Name         string
@@ -44,8 +50,8 @@ type TVEpisodeMetadata struct {
 	Vote           float32
 }
 
-// Generates metadata for all the tv shows, returning it for use for the final html generation.
-func generateTVMetadata(paths Paths) []TVShowMetadata {
+// Generates metadata for everything.
+func generateMetadata(paths Paths) {
 	log.Println("Generating TV metadata")
 
 	shows := make([]TVShowMetadata, 0)
@@ -111,14 +117,23 @@ func generateTVMetadata(paths Paths) []TVShowMetadata {
 			sort.Sort(ByEpisode(season.Episodes))
 
 			show.Seasons = append(show.Seasons, season)
+			generateSeasonHTML(seasonFolder, season, paths)
 		}
 		sort.Sort(BySeason(show.Seasons))
+		generateShowHTML(showFolder, show, paths) {
+	}
+
+	// Make the root metadata.
+	capacity := capacity(paths)
+	metadata := Metadata{
+		TVShows:  shows,
+		Movies:   nil,
+		Capacity: capacity,
 	}
 
 	// Save.
-	data, _ := json.MarshalIndent(shows, "", "    ")
-	outPath := filepath.Join(paths.TV, metadataFilename)
-	ioutil.WriteFile(outPath, data, os.ModePerm)
+	data, _ := json.MarshalIndent(metadata, "", "    ")
+	ioutil.WriteFile(filepath.Join(paths.Root, metadataFilename), data, os.ModePerm)
 }
 
 // List of full directories (eg path + name).
@@ -160,167 +175,92 @@ func (a BySeason) Less(i, j int) bool {
 	return a[i].Season < a[j].Season
 }
 
-// type BySeasonThenEpisode []EpisodeMetadata
+/// Generate a season's html (which is the list of episodes in it).
+func generateSeasonHTML(seasonPath string, season TVSeasonMetadata, paths Paths) {
+	html := htmlStart
+	isLeft := true
+	trOpen := false
 
-// func (a BySeasonThenEpisode) Len() int      { return len(a) }
-// func (a BySeasonThenEpisode) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-// func (a BySeasonThenEpisode) Less(i, j int) bool {
-// 	return a[i].Season*1000+a[i].Episode < a[j].Season*1000+a[j].Episode
-// }
+	for _, episode := range season.Episodes {
+		if isLeft {
+			html += "<tr>"
+			trOpen = true
+		}
 
-// /// Regenerates the list of episodes for the given show path.
-// func generateEpisodeList(showPath string, paths Paths) {
+		linkPath, _ := filepath.Rel(seasonPath, filepath.Join(paths.Root, episode.Media))
+		imagePath, _ := filepath.Rel(seasonPath, filepath.Join(paths.Root, episode.Image))
+		name := fmt.Sprintf("S%02d E%02d", season.Season, episode.Episode, episode.Name)
 
-// 	log.Println("Generating episode list:", showPath)
+		h := htmlTd
+		h = strings.Replace(h, "LINK", linkPath, -1)
+		h = strings.Replace(h, "IMAGE", imagePath, -1)
+		h = strings.Replace(h, "NAME", name, -1)
+		html += h
 
-// 	episodes := make([]EpisodeMetadata, 0)
+		if !isLeft {
+			html += "</tr>"
+			trOpen = false
+		}
 
-// 	files, _ := ioutil.ReadDir(showPath) // Assume this works.
-// 	for _, fileInfo := range files {
-// 		if fileInfo.IsDir() {
-// 			// Parse the 'SxEy'
-// 			_, season, episode, _ := showSeasonEpisodeFromFile(fileInfo.Name())
+		isLeft = !isLeft
+	}
 
-// 			// Load the metadata.
-// 			var metadata *OmdbTVEpisode = nil
-// 			metadataPath := filepath.Join(filepath.Join(showPath, fileInfo.Name()), metadataFilename)
-// 			metadataData, metadataErr := ioutil.ReadFile(metadataPath)
-// 			if metadataErr == nil {
-// 				var m OmdbTVEpisode
-// 				if err := json.Unmarshal(metadataData, &m); err == nil {
-// 					metadata = &m
-// 				}
-// 			}
+	if trOpen {
+		html += "</tr>"
+	}
+	html += htmlEnd
 
-// 			epPath := filepath.Join(showPath, fileInfo.Name())
-// 			mediaPath, _ := filepath.Rel(paths.Root, filepath.Join(epPath, hlsFilename))
-// 			imagePath, _ := filepath.Rel(paths.Root, filepath.Join(epPath, imageFilename))
+	// Save.
+	outPath := filepath.Join(seasonPath, indexHtml)
+	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
+}
 
-// 			ep := EpisodeMetadata{
-// 				Media:    mediaPath,
-// 				Image:    imagePath,
-// 				Season:   season,
-// 				Episode:  episode,
-// 				Metadata: metadata,
-// 			}
-// 			episodes = append(episodes, ep)
-// 		}
-// 	}
+/// Generate a show's html (which is the list of seasons in it).
+func generateShowHTML(showPath string, show TVShowMetadata, paths Paths) {
+	html := htmlStart
+	isLeft := true
+	trOpen := false
 
-// 	// Sort
-// 	sort.Sort(BySeasonThenEpisode(episodes))
+	for _, season := range show.Seasons {
+		if isLeft {
+			html += "<tr>"
+			trOpen = true
+		}
 
-// 	// Save.
-// 	data, _ := json.Marshal(episodes)
-// 	outPath := filepath.Join(showPath, episodeListFilename)
-// 	ioutil.WriteFile(outPath, data, os.ModePerm)
+		linkPath := tvSeasonFolderNameFor(season.Season)
+		imagePath := linkPath + "/" + imageFilename
+		name := season.Name
 
-// 	generateEpisodeListHTML(showPath, episodes, paths)
+		h := htmlTd
+		h = strings.Replace(h, "LINK", linkPath, -1)
+		h = strings.Replace(h, "IMAGE", imagePath, -1)
+		h = strings.Replace(h, "NAME", name, -1)
+		html += h
 
-// 	log.Println("Successfully generated episode list")
-// }
+		if !isLeft {
+			html += "</tr>"
+			trOpen = false
+		}
 
-// func generateEpisodeListHTML(showPath string, episodes []EpisodeMetadata, paths Paths) {
-// 	html := htmlStart
-// 	isLeft := true
-// 	trOpen := false
+		isLeft = !isLeft
+	}
 
-// 	for _, episode := range episodes {
-// 		if isLeft {
-// 			html += "<tr>"
-// 			trOpen = true
-// 		}
+	if trOpen {
+		html += "</tr>"
+	}
+	html += htmlEnd
 
-// 		linkPath, _ := filepath.Rel(showPath, filepath.Join(paths.Root, episode.Media))
-// 		imagePath, _ := filepath.Rel(showPath, filepath.Join(paths.Root, episode.Image))
-// 		name := fmt.Sprintf("S%02d E%02d", episode.Season, episode.Episode)
-// 		if episode.Metadata != nil {
-// 			name = name + " " + episode.Metadata.Title
-// 		}
+	// Save.
+	outPath := filepath.Join(seasonPath, indexHtml)
+	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
+}
 
-// 		h := htmlTd
-// 		h = strings.Replace(h, "LINK", linkPath, -1)
-// 		h = strings.Replace(h, "IMAGE", imagePath, -1)
-// 		h = strings.Replace(h, "NAME", name, -1)
-// 		html += h
-
-// 		if !isLeft {
-// 			html += "</tr>"
-// 			trOpen = false
-// 		}
-
-// 		isLeft = !isLeft
-// 	}
-
-// 	if trOpen {
-// 		html += "</tr>"
-// 	}
-// 	html += htmlEnd
-
-// 	// Save.
-// 	outPath := filepath.Join(showPath, indexHtml)
-// 	ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
-// }
-
-// type ShowMetadata struct {
-// 	Image    string
-// 	Metadata interface{}
-// 	Episodes []interface{}
-// }
-
-// type ByName []ShowMetadata
-
-// func (a ByName) Len() int           { return len(a) }
-// func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-// func (a ByName) Less(i, j int) bool { return a[i].Image < a[j].Image }
-
-// /// Regenerates the list of all tv shows.
-// func generateShowList(paths Paths) {
-
-// 	log.Println("Generating show list")
-
-// 	var shows []ShowMetadata
-
-// 	files, _ := ioutil.ReadDir(paths.TV) // Assume this works.
-// 	for _, fileInfo := range files {
-// 		if fileInfo.IsDir() {
-
-// 			showPath := filepath.Join(paths.TV, fileInfo.Name())
-
-// 			// Load the metadata.
-// 			metadataData, metadataErr := ioutil.ReadFile(filepath.Join(showPath, metadataFilename))
-// 			if metadataErr != nil {
-// 				continue
-// 			}
-// 			var metadata interface{}
-// 			if err := json.Unmarshal(metadataData, &metadata); err != nil {
-// 				continue
-// 			}
-
-// 			// Load the episodes.
-// 			episodesData, episodesErr := ioutil.ReadFile(filepath.Join(showPath, episodeListFilename))
-// 			if episodesErr != nil {
-// 				continue
-// 			}
-// 			var episodes []interface{}
-// 			if err := json.Unmarshal(episodesData, &episodes); err != nil {
-// 				continue
-// 			}
-
-// 			imagePath, _ := filepath.Rel(paths.Root, filepath.Join(showPath, imageFilename))
-// 			s := ShowMetadata{
-// 				Image:    imagePath,
-// 				Metadata: metadata,
-// 				Episodes: episodes,
-// 			}
-// 			shows = append(shows, s)
-// 		}
-// 	}
-
-// 	sort.Sort(ByName(shows))
-
-// 	// Save.
-// 	data, _ := json.MarshalIndent(shows, "", "    ")
-// 	outPath := filepath.Join(paths.TV, metadataFilename)
-// 	ioutil.WriteFile(outPath, data, os.ModePerm)
-// }
+/// Figure out how much disk space is left.
+func capacity(paths Paths) string {
+	cmd := exec.Command("df", "-h", paths.Root)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Run()
+	// TODO split and transpose
+	return strings.TrimSpace(out.String())
+}
