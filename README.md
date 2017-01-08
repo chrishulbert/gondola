@@ -2,11 +2,11 @@
 
 Sick of your kids' DVD's getting scratched and unusable?
 
-Gondola is a media center that is designed to work from a cheap+silent single board computer (SBC) like
+Gondola is a media center that is designed to work from an old laptop, or a cheap+silent single board computer (SBC) like
 a [Chip](https://getchip.com/) or a [Raspberry Pi](https://www.raspberrypi.org/).
 
 It accomplishes this feat by pre-processing your media into [HLS](https://developer.apple.com/streaming/),
-then serving it using nginx. This can take a very long time eg overnight, so the recommended use case for this is to make backups of DVDs that you're likely to watch more than once. Eg your kids' movies, so you don't have to worry about the discs getting scratched.
+then serving it using Nginx. Pre-processing can take a very long time eg overnight on a Chip, so the recommended use case for this is to make backups of DVDs that you're likely to watch more than once. Eg your kids' movies, so you don't have to worry about the discs getting scratched.
 
 ## Features
 
@@ -23,12 +23,7 @@ wait until transfer has complete to begin importing it automatically.
 
 ## Drawbacks
 
-* Media must be pre-processed, which can take a long time if it's high quality. Eg I tried a 2-hour 1080p movie, and my Chip took 2 days to transcode it. This is why I recommend this for movies you'll watch over and over again, eg your kids' movies.
-
-## How to install
-
-* Create `~/.gondola` as a config file, with the contents: `root = "~/Gondola"` or wherever you wish your root storage to be.
-* See `exclusive.go` for instructions for configuring this to get sudo access to lsof, for watching the folder for changes.
+* Media must be pre-processed, which can take a long time if it's high quality. Eg I tried a 2-hour 1080p movie, and my Chip took 2 days to transcode it. This is why I recommend this for movies you'll watch over and over again, eg your kids' movies. However if you use an old laptop, it's must faster.
 
 ## Notes
 
@@ -69,7 +64,7 @@ So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's 
 
 The name is a tortured metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
 
-## Installation
+## Installation on a CHIP
 
 * Buy a chip from [getchip.com](https://getchip.com/pages/store)
 * Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
