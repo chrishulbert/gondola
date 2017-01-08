@@ -8,11 +8,12 @@ type TmdbTvEpisodeDetails struct {
 	Id             int
 	Name           string
 	Overview       string
-	SeasonNumber   int    `json:"season_number"`
-	EpisodeNumber  int    `json:"episode_number"`
-	AirDate        string `json:"air_date"`
-	ProductionCode string `json:"production_code"`
-	StillPath      string `json:"still_path"`
+	SeasonNumber   int     `json:"season_number"`
+	EpisodeNumber  int     `json:"episode_number"`
+	AirDate        string  `json:"air_date"`
+	ProductionCode string  `json:"production_code"`
+	StillPath      string  `json:"still_path"`
+	VoteAverage    float32 `json:"vote_average"`
 }
 
 // Finds the details for one episode.

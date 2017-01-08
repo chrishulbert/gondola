@@ -56,6 +56,7 @@ func generateTVMetadata(paths Paths) []TVShowMetadata {
 			continue
 		}
 
+		// Create the model.
 		image, _ := filepath.Rel(paths.Root, filepath.Join(showFolder, imageFilename))
 		backdrop, _ := filepath.Rel(paths.Root, filepath.Join(showFolder, imageBackdropFilename))
 		show := TVShowMetadata{
@@ -67,8 +68,57 @@ func generateTVMetadata(paths Paths) []TVShowMetadata {
 			FirstAirDate: showDetails.FirstAirDate,
 			LastAirDate:  showDetails.LastAirDate,
 		}
+
+		// Find the seasons.
+		for _, seasonFolder := range directoriesIn(showFolder) {
+			var seasonDetails *TmdbTvSeasonDetails
+			if err := readAndUnmarshal(seasonFolder, metadataFilename, &seasonDetails); err != nil {
+				continue
+			}
+
+			image, _ := filepath.Rel(paths.Root, filepath.Join(seasonFolder, imageFilename))
+			season := TVSeasonMetadata{
+				TMDBId:   seasonDetails.Id,
+				Season:   seasonDetails.SeasonNumber,
+				Name:     seasonDetails.Name,
+				Overview: seasonDetails.Overview,
+				Image:    image,
+				AirDate:  seasonDetails.AirDate,
+			}
+
+			// Find the episodes.
+			for _, epFolder := range directoriesIn(seasonFolder) {
+				var epDetails *TmdbTvEpisodeDetails
+				if err := readAndUnmarshal(epFolder, metadataFilename, &epDetails); err != nil {
+					continue
+				}
+
+				image, _ := filepath.Rel(paths.Root, filepath.Join(epFolder, imageFilename))
+				media, _ := filepath.Rel(paths.Root, filepath.Join(epFolder, hlsFilename))
+				episode := TVEpisodeMetadata{
+					TMDBId:         epDetails.Id,
+					Episode:        epDetails.EpisodeNumber,
+					Name:           epDetails.Name,
+					Overview:       epDetails.Overview,
+					Image:          image,
+					Media:          media,
+					AirDate:        epDetails.AirDate,
+					ProductionCode: epDetails.ProductionCode,
+					Vote:           epDetails.VoteAverage,
+				}
+				season.Episodes = append(season.Episodes, episode)
+			}
+			sort.Sort(ByEpisode(season.Episodes))
+
+			show.Seasons = append(show.Seasons, season)
+		}
+		sort.Sort(BySeason(show.Seasons))
 	}
 
+	// Save.
+	data, _ := json.MarshalIndent(shows, "", "    ")
+	outPath := filepath.Join(paths.TV, metadataFilename)
+	ioutil.WriteFile(outPath, data, os.ModePerm)
 }
 
 // List of full directories (eg path + name).
@@ -90,6 +140,24 @@ func readAndUnmarshal(folder string, file string, v interface{}) error {
 		return err
 	}
 	return json.Unmarshal(data, v)
+}
+
+// Sorting.
+
+type ByEpisode []TVEpisodeMetadata
+
+func (a ByEpisode) Len() int      { return len(a) }
+func (a ByEpisode) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByEpisode) Less(i, j int) bool {
+	return a[i].Episode < a[j].Episode
+}
+
+type BySeason []TVSeasonMetadata
+
+func (a BySeason) Len() int      { return len(a) }
+func (a BySeason) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a BySeason) Less(i, j int) bool {
+	return a[i].Season < a[j].Season
 }
 
 // type BySeasonThenEpisode []EpisodeMetadata
