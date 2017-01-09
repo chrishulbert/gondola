@@ -23,7 +23,7 @@ wait until transfer has complete to begin importing it automatically.
 
 ## Drawbacks
 
-* Media must be pre-processed, which can take a long time if it's high quality. Eg I tried a 2-hour 1080p movie, and my Chip took 2 days to transcode it. This is why I recommend this for movies you'll watch over and over again, eg your kids' movies. However if you use an old laptop, it's must faster.
+* Media must be pre-processed, which can take a long time if it's high quality. Eg I tried a 2-hour 1080p movie, and my Chip took 40 hours to transcode it. This is why I recommend this for movies you'll watch over and over again, eg your kids' movies. You will likely find it to be an order of magnitude faster if you use an old laptop, but it'll be noisier / use more electricity.
 
 ## Notes
 
