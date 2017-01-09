@@ -70,7 +70,14 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 /// Converts to HLS. If it gets back an error about h264_mp4toannexb, it retries with the appropriate command.
 func runConvertToHLS(inPath string, outPath string, audioArgs []string, videoArgs []string) error {
 	log.Printf("Converting to HLS with ffmpeg, audio: %+v; video: %+v\n", audioArgs, videoArgs)
-	firstArgs := []string{"-i", inPath}
+	firstArgs := []string{
+		"-i", inPath, // Select the input file.
+		"-map", "0:v", // This copies all video channels, even though there's hopefully only one.
+		"-map", "0:a", // This copies all audio channels, so if there's a commentary channel it won't copy only the commentary.
+		// Can't copy subs, as ffmpeg segfaults with an error "Exactly one WebVTT stream is needed".
+		// "-map", "0:s", // Copies all subs
+		// "-c:s", "copy", // Copy subs, no transcode option for subs. It's a bit silly this needs to be specified.
+	}
 	lastArgs := []string{"-hls_list_size", "0", outPath}
 	allArgs := append(append(append(firstArgs, audioArgs...), videoArgs...), lastArgs...)
 	result, err := exec.Command("ffmpeg", allArgs...).CombinedOutput()
