@@ -2,9 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/xrash/smetrics"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
-	"filepath"
 )
 
 type GuessEpisode struct {
@@ -43,7 +46,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	}
 
 	// Get show details.
-	tmdbSeries, tmdbSeriesData, tmdbSeriesErr := requestTmdbTVShowDetails(tmdbId)
+	tmdbSeries, _, tmdbSeriesErr := requestTmdbTVShowDetails(tmdbId)
 	if tmdbSeriesErr != nil {
 		log.Println("Could not get TV show metadata for", showTitleFromFile)
 		return tmdbSeriesErr
@@ -54,7 +57,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	// Find all seasons.
 	for _, season := range tmdbSeries.Seasons {
 
-		tmdbSeason, tmdbSeasonData, tmdbSeasonErr := requestTmdbTVSeason(tmdbId, season.SeasonNumber)
+		tmdbSeason, _, tmdbSeasonErr := requestTmdbTVSeason(tmdbId, season.SeasonNumber)
 		if tmdbSeasonErr != nil {
 			log.Println("Could not get season metadata for", showTitleFromFile)
 			return tmdbSeasonErr
@@ -80,10 +83,14 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	closestDistance := 99999
 	var closestGuess *GuessEpisode
 	for _, ep := range allEpisodes {
-		thisDistance := smetrics.WagnerFischer(episodeTitleFromFile, ep.Name, 1, 1, 2)
+		thisDistance := smetrics.WagnerFischer(
+			strings.ToLower(episodeTitleFromFile),
+			strings.ToLower(ep.Name),
+			1, 1, 2)
+		log.Println(episodeTitleFromFile, "to", ep.Name, "is", fmt.Sprintf("%d", thisDistance))
 		if thisDistance < closestDistance {
 			closestDistance = thisDistance
-			closestGuess = ep
+			closestGuess = &ep
 		}
 	}
 
@@ -92,8 +99,9 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	}
 
 	// Rename it and succeed.
-	sxex := return fmt.Sprintf("S%02dE%02d", closestGuess.Season, closestGuess.Episode)
+	sxex := fmt.Sprintf("S%02dE%02d", closestGuess.Season, closestGuess.Episode)
 	newName := tmdbSeries.Name + " " + sxex + " " + closestGuess.Name + "." + file + ".remove if correct"
 	os.Rename(filepath.Join(folder, file), filepath.Join(folder, newName))
+	log.Println("Guessed a file. You can remove the 'remove if correct' if you're happy with the guess.")
 	return nil
 }

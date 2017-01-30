@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-// Actually processses a file that's in the new folder.
+// Actually processes a file that's in the new folder.
 func processTV(folder string, file string, paths Paths, config Config) error {
 	inPath := filepath.Join(folder, file)
 	log.Println("Processing", file)
@@ -17,10 +17,19 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	// Parse the title.
 	showTitleFromFile, season, episode, err := showSeasonEpisodeFromFile(file)
 	if err != nil {
-		log.Println("Failed to parse season/episode for", file)
-		failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
-		os.Rename(inPath, failedPath)
-		return err
+
+		// Try to guess the season/ep if it's eg `Some TV Show - Episode Name.vob` format.
+		guessErr := tvEpisodeGuess(folder, file, paths, config)
+		if guessErr == nil {
+			// Succeeded in making a guess! Now skip this file because it's been renamed and the user must confirm.
+			return nil
+		} else {
+			log.Println("Couldn't guess the episode", guessErr)
+			log.Println("Failed to parse season/episode for", file)
+			failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
+			os.Rename(inPath, failedPath)
+			return err
+		}
 	}
 
 	// Get and save the show data. This has to happen for every episode so we can get the proper title name.
