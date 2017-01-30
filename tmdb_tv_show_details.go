@@ -15,11 +15,18 @@ type TmdbTvShowDetails struct {
 	InProduction bool   `json:"in_production"`
 	Homepage     string
 	Genres       []TmdbTvShowGenre
+	Seasons      []TmdbTvShowSeason
 }
 
 type TmdbTvShowGenre struct {
 	Id   int
 	Name string
+}
+
+type TmdbTvShowSeason struct {
+	Id           int
+	PosterPath   string `json:"poster_path"`
+	SeasonNumber int    `json:"season_number"`
 }
 
 // Finds the tv show details.

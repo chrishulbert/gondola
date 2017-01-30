@@ -11,6 +11,14 @@ type TmdbTvSeasonDetails struct {
 	Overview     string
 	PosterPath   string `json:"poster_path"`
 	SeasonNumber int    `json:"season_number"`
+	Episodes     []TmdbTvSeasonDetailsEpisode
+}
+
+type TmdbTvSeasonDetailsEpisode struct {
+	EpisodeNumber int `json:"episode_number"`
+	SeasonNumber  int `json:"season_number"`
+	Name          string
+	Overview      string
 }
 
 // Finds the tv show details for one season.
