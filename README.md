@@ -57,12 +57,17 @@ For TV shows placed in `New/TV` folder, use the following:
 
 	* Some.TV.Show.S01E02.DVD.vob
 	* Some TV Show S01E02 Blah blah blah.vob
+	* Some TV Show - Episode Name.vob
 
 So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's title is to the left, and ignores anything to the right. It then searches OMDB to find the show's metadata.
 
+If you use the last format (eg there's no SxEy, and there is a `-`), it takes a 'best guess' at which season and episode it is. This is useful for shows where the DVD order is different to the TV order. I actually recommend using this when you make backups of your DVDs. The episode name doesn't need to be an exact match, because it does a 'Levenshtein distance' calculation to make a best guess at which episode it is.
+
+But it forces you to confirm it guessed correctly: the file is renamed to the best guess, with a `.remove if correct` extension attached. If you're happy with the guess, rename the file to remove the extension, and it'll process as usual. Eg if you upload `Seinfeld - Serenity.vob`, it'll rename it to `Seinfeld S09E03 The Serenity Now.Seinfeld - Serenity.vob.remove if correct`. The first half of that is the guessed episode's number and it's name according to TMDB, then the original name you gave the file, then the remove_if_correct extension for you to remove as a confirmation that you're happy.
+
 ## Name
 
-The name is a tortured metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
+The name is a (tortured) metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
 
 ## Installation on a CHIP
 
