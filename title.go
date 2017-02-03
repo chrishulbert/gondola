@@ -44,3 +44,15 @@ func showSeasonEpisodeFromFile(file string) (string, int, int, error) {
 		return "", 0, 0, errors.New("Couldn't find SxxEyy in " + file)
 	}
 }
+
+// Find `AudioStreamX` in a file and returns X. Or nil if it can't find. 0 is a valid stream number.
+func audioStreamFromFile(file string) *int {
+	regex := regexp.MustCompile(`AudioStream(\d+)`)
+	matches := regex.FindStringSubmatch(file)
+	if len(matches) >= 2 {
+		index, _ := strconv.Atoi(matches[1])
+		return &index
+	} else {
+		return nil
+	}
+}
