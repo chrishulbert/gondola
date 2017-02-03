@@ -1,26 +1,25 @@
 package main
 
 import (
-	"os/exec"
 	"encoding/json"
-	"errors"
+	"os/exec"
 )
 
 // For JSON to parse, _ needs to be as-is, and they need to start caps in the structs.
 
 type ProbeResult struct {
 	Streams []ProbeStream
-	Format ProbeFormat
+	Format  ProbeFormat
 }
 
 type ProbeStream struct {
-	Avg_frame_rate string //": "25/1",
-	Bit_rate string //": "192000",
-	Bits_per_sample int //": 0,
-	Channel_layout string // ": "stereo", "5.1(side)",
+	Avg_frame_rate  string //": "25/1",
+	Bit_rate        string //": "192000",
+	Bits_per_sample int    //": 0,
+	Channel_layout  string // ": "stereo", "5.1(side)",
 	// 5.1            FL+FR+FC+LFE+BL+BR
 	// 5.1(side)      FL+FR+FC+LFE+SL+SR
-	Channels int //": 2,
+	Channels        int    //": 2,
 	Chroma_location string // ": "left",
 
 	// video codec stuff:
@@ -49,53 +48,53 @@ type ProbeStream struct {
 	// codec_tag_string=avc1  <- !!! needs transcode
 	// codec_tag=0x31637661  <- 1 c v a
 
-	Codec_long_name string //": "ATSC A/52A (AC-3)" "DVD subtitles" "MPEG-2 video",
-	Codec_name string // "ac3" "dvdsub" "mpeg2video",
-	Codec_tag string // "0x0000",
-	Codec_tag_string string // "[0][0][0][0]",
-	Codec_time_base string // "0/1" "1/48000" "1/50",
-	Codec_type string // "audio" "subtitle" "video",
-	Coded_height int // 0,
-	Coded_width int // 0,
-	Color_range string // "tv",
+	Codec_long_name      string //": "ATSC A/52A (AC-3)" "DVD subtitles" "MPEG-2 video",
+	Codec_name           string // "ac3" "dvdsub" "mpeg2video",
+	Codec_tag            string // "0x0000",
+	Codec_tag_string     string // "[0][0][0][0]",
+	Codec_time_base      string // "0/1" "1/48000" "1/50",
+	Codec_type           string // "audio" "subtitle" "video",
+	Coded_height         int    // 0,
+	Coded_width          int    // 0,
+	Color_range          string // "tv",
 	Display_aspect_ratio string // "16:9",
-	Dmix_mode string // ": "-1",
-	Duration string // "2.033911",
-	Duration_ts int // 183052,
-	Has_b_frames int // 1,
-	Height int // 576,
-	Id string // "0x1e0",
-	Index int // 0,
-	Level int // 8,
-	Loro_cmixlev string // "-1.000000",
-	Loro_surmixlev string // "-1.000000",
-	Ltrt_cmixlev string // "-1.000000",
-	Ltrt_surmixlev string // "-1.000000",
-	Max_bit_rate string // "9800000",
-	Pix_fmt string // "yuv420p",
-	Profile string // "Main",
-	R_frame_rate string // "25/1",
-	Refs int // 1,
-	Sample_aspect_ratio string // "64:45",
-	Sample_fmt string // fltp",
-	Sample_rate string // "48000",
-	Start_pts int // 25854,
-	Start_time string // "0.287267",
-	Time_base string // "1/90000",
-	Timecode string // "00:59:58:00",
-	Width int // 720,
+	Dmix_mode            string // ": "-1",
+	Duration             string // "2.033911",
+	Duration_ts          int    // 183052,
+	Has_b_frames         int    // 1,
+	Height               int    // 576,
+	Id                   string // "0x1e0",
+	Index                int    // 0,
+	Level                int    // 8,
+	Loro_cmixlev         string // "-1.000000",
+	Loro_surmixlev       string // "-1.000000",
+	Ltrt_cmixlev         string // "-1.000000",
+	Ltrt_surmixlev       string // "-1.000000",
+	Max_bit_rate         string // "9800000",
+	Pix_fmt              string // "yuv420p",
+	Profile              string // "Main",
+	R_frame_rate         string // "25/1",
+	Refs                 int    // 1,
+	Sample_aspect_ratio  string // "64:45",
+	Sample_fmt           string // fltp",
+	Sample_rate          string // "48000",
+	Start_pts            int    // 25854,
+	Start_time           string // "0.287267",
+	Time_base            string // "1/90000",
+	Timecode             string // "00:59:58:00",
+	Width                int    // 720,
 }
 
 type ProbeFormat struct {
-	Filename string
-	Nb_streams int
-	Nb_programs int
-	Format_name string // ": "mpeg",
+	Filename         string
+	Nb_streams       int
+	Nb_programs      int
+	Format_name      string // ": "mpeg",
 	Format_long_name string //": "MPEG-PS (MPEG-2 Program Stream)",
-	Start_time string // ": "0.287267",
-	Duration string //": "2.057911",
-	Size string //": "954906624",
-	Probe_score int //": 52
+	Start_time       string // ": "0.287267",
+	Duration         string //": "2.057911",
+	Size             string //": "954906624",
+	Probe_score      int    //": 52
 }
 
 // Probes a media file
@@ -112,30 +111,22 @@ func probe(path string) (*ProbeResult, error) {
 	return &result, parseErr
 }
 
-func (r *ProbeResult) audioStream() *ProbeStream {
+func (r *ProbeResult) audioStreams() []ProbeStream {
+	streams := make([]ProbeStream, 0)
 	for _, stream := range r.Streams {
 		if stream.Codec_type == "audio" {
-			return &stream
+			streams = append(streams, stream)
 		}
 	}
-	return nil
+	return streams
 }
 
-func (r *ProbeResult) videoStream() *ProbeStream {
+func (r *ProbeResult) videoStreams() []ProbeStream {
+	streams := make([]ProbeStream, 0)
 	for _, stream := range r.Streams {
 		if stream.Codec_type == "video" {
-			return &stream
+			streams = append(streams, stream)
 		}
 	}
-	return nil
+	return streams
 }
-
-func (r *ProbeResult) audioVideoStreams() (*ProbeStream, *ProbeStream, error) {
-	a := r.audioStream()
-	v := r.videoStream()
-	if a==nil || v==nil {
-		return a, v, errors.New("Couldn't find streams")
-	}
-	return a, v, nil
-}
-

@@ -2,19 +2,25 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
+// Custom error for 'couldn't transcode, but i renamed it, so don't move it to failed'.
+type convertRenamedError struct {
+	text string
+}
+
+func (e *convertRenamedError) Error() string {
+	return "Something was wrong with this file that needs user intervention: " + e.text + ". Renamed the file so the user is forced to choose."
+}
+
 // Tries to convert the given video to hls.
 func convertToHLSAppropriately(inPath string, outPath string, config Config) error {
-	if config.DebugSkipHLS {
-		// Skip conversion, this is good for debugging.
-		log.Println("Not converting to HLS due to DebugSkipHLS flag")
-		return nil
-	}
-
 	// Probe it to find out what needs doing.
 	log.Println("Probing, this sometimes takes a while...")
 	probeResult, probeErr := probe(inPath)
@@ -25,12 +31,40 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 	log.Printf("Probe result: %+v", probeResult)
 
 	// Find the streams
-	audioStream, videoStream, streamErr := probeResult.audioVideoStreams()
-	if streamErr != nil {
-		return streamErr
+	audioStreams := probeResult.audioStreams()
+	videoStreams := probeResult.videoStreams()
+	if len(audioStreams) == 0 {
+		return errors.New("No audio stream")
+	}
+	if len(videoStreams) == 0 {
+		return errors.New("No video stream")
+	}
+
+	// Too many audio streams?
+	if len(audioStreams) > 1 {
+		TODO check if AudioStreamX exists in the filename?
+		log.Printf("Too many audio streams, splitting them out and forcing the user to choose one.")
+		for _, stream := range audioStreams {
+			args := []string{
+				"-ss", "60", // Start from 60s
+				"-t", "60", // Only grab 60s
+				"-i", inPath,
+				"-map", fmt.Sprintf("0:%d", stream.Index),
+				"-b:a", "128k", // CBR so it previews nicely on osx.
+				inPath + fmt.Sprintf(".AudioStream%d preview.mp3", stream.Index),
+			}
+			exec.Command("ffmpeg", args...).CombinedOutput() // TODO handle errors one day. This *should* work if probing succeeded earlier however.
+		}
+		// Rename it.
+		ext := filepath.Ext(inPath) // Eg '.vob'
+		nameSansExt := strings.TrimSuffix(inPath, ext)
+		newName := nameSansExt + ".AudioStreamX" + ext + ".please insert correct audio stream number then remove this"
+		os.Rename(inPath, newName)
+		return &convertRenamedError{text: "Too many audio streams"}
 	}
 
 	// Figure out what to do with the audio.
+	audioStream := audioStreams[TODO choose the one as per the filename or the first]
 	var audioCommand []string
 	if audioStream.Channel_layout == "stereo" && audioStream.Codec_name == "aac" {
 		audioCommand = []string{"-acodec", "copy"} // Best case, can leave as-is.
@@ -49,6 +83,7 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 	}
 
 	// Figure out what to do with the video.
+	videoStream := videoStreams[0]
 	var videoArgs []string
 	if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" {
 		// Can only direct copy if not avc1, or it won't be a seekable video.
@@ -64,11 +99,17 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 		videoArgs = nil
 	}
 
-	return runConvertToHLS(inPath, outPath, audioCommand, videoArgs)
+	if config.DebugSkipHLS {
+		// Skip conversion, this is good for debugging.
+		log.Println("Not converting to HLS due to DebugSkipHLS flag")
+		return nil
+	}
+
+	return runConvertToHLS(inPath, outPath, audioStream.Index, videoStream.Index, audioCommand, videoArgs)
 }
 
 /// Converts to HLS. If it gets back an error about h264_mp4toannexb, it retries with the appropriate command.
-func runConvertToHLS(inPath string, outPath string, audioArgs []string, videoArgs []string) error {
+func runConvertToHLS(inPath string, outPath string, audioStreamIndex int, videoStreamIndex int, audioArgs []string, videoArgs []string) error {
 	log.Printf("Converting to HLS with ffmpeg, audio: %+v; video: %+v\n", audioArgs, videoArgs)
 	firstArgs := []string{
 		"-i", inPath, // Select the input file.

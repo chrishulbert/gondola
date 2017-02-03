@@ -91,9 +91,14 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 
 	// Fail! Move it to the failed folder.
 	if convertErr != nil {
-		log.Println("Failed to convert", file, "; moving to the Failed folder, err:", convertErr)
-		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
-		os.Rename(inPath, failedPath)
+		switch err := convertErr.(type) {
+		case *convertRenamedError:
+			log.Println("Failed to convert", file, "; file renamed for user intervention, err:", err)
+		default:
+			log.Println("Failed to convert", file, "; moving to the Failed folder, err:", err)
+			failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+			os.Rename(inPath, failedPath)
+		}
 		os.RemoveAll(episodeFolder) // Tidy up.
 		return errors.New("Couldn't convert " + file)
 	}

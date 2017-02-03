@@ -84,9 +84,9 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	var closestGuess *GuessEpisode
 	for _, ep := range allEpisodes {
 		thisDistance := smetrics.WagnerFischer(
-			strings.ToLower(episodeTitleFromFile),
 			strings.ToLower(ep.Name),
-			1, 1, 2)
+			strings.ToLower(episodeTitleFromFile),
+			1, 3, 2)
 		if thisDistance < closestDistance {
 			closestDistance = thisDistance
 			epCopy := ep // Without this, the memory for 'ep' is overwritten next loop iteration.
