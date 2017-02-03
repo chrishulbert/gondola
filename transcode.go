@@ -33,38 +33,46 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 	// Find the streams
 	audioStreams := probeResult.audioStreams()
 	videoStreams := probeResult.videoStreams()
-	if len(audioStreams) == 0 {
-		return errors.New("No audio stream")
-	}
 	if len(videoStreams) == 0 {
 		return errors.New("No video stream")
 	}
 
-	// Too many audio streams?
-	if len(audioStreams) > 1 {
-		TODO check if AudioStreamX exists in the filename?
-		log.Printf("Too many audio streams, splitting them out and forcing the user to choose one.")
-		for _, stream := range audioStreams {
-			args := []string{
-				"-ss", "60", // Start from 60s
-				"-t", "60", // Only grab 60s
-				"-i", inPath,
-				"-map", fmt.Sprintf("0:%d", stream.Index),
-				"-b:a", "128k", // CBR so it previews nicely on osx.
-				inPath + fmt.Sprintf(".AudioStream%d preview.mp3", stream.Index),
+	// Figure out which audio stream.
+	var audioStream ProbeStream
+	if len(audioStreams) == 0 {
+		return errors.New("No audio stream")
+	} else if len(audioStreams) == 1 {
+		// Easy case, just one to choose from.
+		audioStream = audioStreams[0]
+	} else {
+		// More than one audio. Either need to make the user choose, or take their choice.
+		indexFromFilename := audioStreamFromFile(inPath)
+		if indexFromFilename == nil {
+			// User hasn't made a selection.
+			log.Printf("Too many audio streams, splitting them out and forcing the user to choose one.")
+			for _, stream := range audioStreams {
+				args := []string{
+					"-ss", "60", // Start from 60s
+					"-t", "60", // Only grab 60s
+					"-i", inPath,
+					"-map", fmt.Sprintf("0:%d", stream.Index),
+					"-b:a", "128k", // CBR so it previews nicely on osx.
+					inPath + fmt.Sprintf(".AudioStream%d preview.mp3", stream.Index),
+				}
+				exec.Command("ffmpeg", args...).CombinedOutput() // TODO handle errors one day. This *should* work if probing succeeded earlier however.
 			}
-			exec.Command("ffmpeg", args...).CombinedOutput() // TODO handle errors one day. This *should* work if probing succeeded earlier however.
+			// Rename it.
+			ext := filepath.Ext(inPath) // Eg '.vob'
+			nameSansExt := strings.TrimSuffix(inPath, ext)
+			newName := nameSansExt + ".AudioStreamX" + ext + ".please insert correct audio stream number then remove this"
+			os.Rename(inPath, newName)
+			return &convertRenamedError{text: "Too many audio streams"}
+		} else {
+			TODO choose the stream
 		}
-		// Rename it.
-		ext := filepath.Ext(inPath) // Eg '.vob'
-		nameSansExt := strings.TrimSuffix(inPath, ext)
-		newName := nameSansExt + ".AudioStreamX" + ext + ".please insert correct audio stream number then remove this"
-		os.Rename(inPath, newName)
-		return &convertRenamedError{text: "Too many audio streams"}
 	}
 
 	// Figure out what to do with the audio.
-	audioStream := audioStreams[TODO choose the one as per the filename or the first]
 	var audioCommand []string
 	if audioStream.Channel_layout == "stereo" && audioStream.Codec_name == "aac" {
 		audioCommand = []string{"-acodec", "copy"} // Best case, can leave as-is.
