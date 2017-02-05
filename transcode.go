@@ -52,11 +52,12 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 			log.Printf("Too many audio streams, splitting them out and forcing the user to choose one.")
 			for _, stream := range audioStreams {
 				args := []string{
-					"-ss", "60", // Start from 60s
-					"-t", "60", // Only grab 60s
+					// "-ss", "60", // Start from 60s
+					"-t", "180", // Only grab Xs
 					"-i", inPath,
 					"-map", fmt.Sprintf("0:%d", stream.Index),
-					"-b:a", "128k", // CBR so it previews nicely on osx.
+					"-ac", "1", // Make it mono for speed and size.
+					"-b:a", "64k", // CBR so it previews nicely on osx.
 					inPath + fmt.Sprintf(".AudioStream%d preview.mp3", stream.Index),
 				}
 				exec.Command("ffmpeg", args...).CombinedOutput() // TODO handle errors one day. This *should* work if probing succeeded earlier however.
