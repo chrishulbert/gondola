@@ -75,7 +75,7 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 			}
 
 			// Did it find it?
-			if audioStream.Index != indexFromFilename {
+			if audioStream.Index != *indexFromFilename {
 				return errors.New("Couldn't find the stream with the index as per the filename")
 			}
 		}
@@ -130,8 +130,8 @@ func runConvertToHLS(inPath string, outPath string, audioStreamIndex int, videoS
 	log.Printf("Converting to HLS with ffmpeg, audio: %+v; video: %+v\n", audioArgs, videoArgs)
 	firstArgs := []string{
 		"-i", inPath, // Select the input file.
-		"-map", "0:v", // This copies all video channels, even though there's hopefully only one.
-		"-map", "0:a", // This copies all audio channels, so if there's a commentary channel it won't copy only the commentary.
+		"-map", fmt.Sprintf("0:%d", videoStreamIndex), // Select the video stream. '0:v' would copy all video channels, but that's out of scope for this simple project.
+		"-map", fmt.Sprintf("0:%d", audioStreamIndex), // 0:a would copy all audio channels, but iOS won't let you select channels from the stock media player.
 		// Can't copy subs, as ffmpeg segfaults with an error "Exactly one WebVTT stream is needed".
 		// "-map", "0:s", // Copies all subs
 		// "-c:s", "copy", // Copy subs, no transcode option for subs. It's a bit silly this needs to be specified.
