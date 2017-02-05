@@ -68,7 +68,16 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 			os.Rename(inPath, newName)
 			return &convertRenamedError{text: "Too many audio streams"}
 		} else {
-			TODO choose the stream
+			for _, stream := range audioStreams {
+				if stream.Index == *indexFromFilename {
+					audioStream = stream
+				}
+			}
+
+			// Did it find it?
+			if audioStream.Index != indexFromFilename {
+				return errors.New("Couldn't find the stream with the index as per the filename")
+			}
 		}
 	}
 
