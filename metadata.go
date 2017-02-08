@@ -62,6 +62,7 @@ func generateMetadata(paths Paths) {
 
 	shows := make([]TVShowMetadata, 0)
 	for _, showFolder := range directoriesIn(paths.TV) {
+
 		// Load the metadata.
 		var showDetails *TmdbTvShowDetails
 		if err := readAndUnmarshal(showFolder, metadataFilename, &showDetails); err != nil {
@@ -126,6 +127,8 @@ func generateMetadata(paths Paths) {
 			generateSeasonHTML(seasonFolder, season, paths)
 		}
 		sort.Sort(BySeason(show.Seasons))
+
+		shows = append(shows, show)
 		generateShowHTML(showFolder, show, paths)
 	}
 
@@ -133,7 +136,7 @@ func generateMetadata(paths Paths) {
 	capacity := capacity(paths)
 	metadata := Metadata{
 		TVShows:  shows,
-		Movies:   nil,
+		Movies:   nil, // TODO
 		Capacity: capacity,
 	}
 
