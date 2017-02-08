@@ -21,6 +21,13 @@ func (e *convertRenamedError) Error() string {
 
 // Tries to convert the given video to hls.
 func convertToHLSAppropriately(inPath string, outPath string, config Config) error {
+
+	if config.DebugSkipHLS {
+		// Skip conversion, this is good for debugging.
+		log.Println("Not converting to HLS due to DebugSkipHLS flag")
+		return nil
+	}
+
 	// Probe it to find out what needs doing.
 	log.Println("Probing, this sometimes takes a while...")
 	probeResult, probeErr := probe(inPath)
@@ -115,12 +122,6 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 		// Any other codec needs transcoding.
 		log.Println("Video needs transcoding, original codec doesn't suit")
 		videoArgs = nil
-	}
-
-	if config.DebugSkipHLS {
-		// Skip conversion, this is good for debugging.
-		log.Println("Not converting to HLS due to DebugSkipHLS flag")
-		return nil
 	}
 
 	return runConvertToHLS(inPath, outPath, audioStream.Index, videoStream.Index, audioCommand, videoArgs)
