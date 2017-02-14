@@ -20,7 +20,13 @@ type Metadata struct {
 }
 
 type MovieMetadata struct {
-	// TODO
+	TMDBId      int
+	Name        string
+	Overview    string
+	Image       string
+	Backdrop    string
+	ReleaseDate string
+	Vote        float32
 }
 
 type TVShowMetadata struct {
@@ -132,11 +138,35 @@ func generateMetadata(paths Paths) {
 		generateShowHTML(showFolder, show, paths)
 	}
 
+	// Find the movies.
+	movies := make([]MovieMetadata, 0)
+	for _, folder := range directoriesIn(paths.Movies) {
+		// Load the metadata.
+		var details *TmdbMovieSearchResult
+		if err := readAndUnmarshal(folder, metadataFilename, &details); err != nil {
+			continue
+		}
+
+		// Create the model.
+		image, _ := filepath.Rel(paths.Root, filepath.Join(folder, imageFilename))
+		backdrop, _ := filepath.Rel(paths.Root, filepath.Join(folder, imageBackdropFilename))
+		movie := MovieMetadata{
+			TMDBId:      details.Id,
+			Name:        details.Title,
+			Overview:    details.Overview,
+			Image:       image,
+			Backdrop:    backdrop,
+			ReleaseDate: details.ReleaseDate,
+			Vote:        details.VoteAverage,
+		}
+		movies = append(movies, movie)
+	}
+
 	// Make the root metadata.
 	capacity := capacity(paths)
 	metadata := Metadata{
 		TVShows:  shows,
-		Movies:   nil, // TODO
+		Movies:   movies,
 		Capacity: capacity,
 	}
 
