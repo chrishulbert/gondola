@@ -21,31 +21,24 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 	stagingOutputFolder := filepath.Join(paths.Staging, fileTitle)
 	os.MkdirAll(stagingOutputFolder, os.ModePerm)
 
-	// Get the OMDB metadata.
-	omdbMovie, omdbErr := omdbRequest(fileTitle, year)
-	if omdbErr != nil {
-		log.Println("Failed to find OMDB data for", fileTitle, "error:", omdbErr)
+	// Get the metadata.
+	tmdbMovie, tmdbErr := requestTmdbMovieSearch(fileTitle, year)
+	if tmdbErr != nil {
+		log.Println("Failed to find TMDB data for", fileTitle, "error:", tmdbErr)
 		failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
 		os.Rename(inPath, failedPath)
 		os.RemoveAll(stagingOutputFolder) // Tidy up.
-		return omdbErr
+		return tmdbErr
 	} else {
-		// Save the OMDB metadata.
-		metadata, _ := json.Marshal(omdbMovie)
+		// Save the metadata.
+		metadata, _ := json.Marshal(tmdbMovie)
 		metadataPath := filepath.Join(stagingOutputFolder, metadataFilename)
 		ioutil.WriteFile(metadataPath, metadata, os.ModePerm)
 	}
 
 	// Get the image.
-	log.Println("Downloading an image")
-	imageData, imageErr := imageForTitle(omdbMovie.Title)
-	if imageErr != nil {
-		log.Println("Couldn't download the image", omdbMovie.Title, imageErr)
-	} else {
-		// Save the image.
-		imagePath := filepath.Join(stagingOutputFolder, imageFilename)
-		ioutil.WriteFile(imagePath, imageData, os.ModePerm)
-	}
+	getImageIfNeeded(tmdbMovie.PosterPath, "w780", stagingOutputFolder, imageFilename)
+	getImageIfNeeded(tmdbMovie.BackdropPath, "w1280", stagingOutputFolder, imageBackdropFilename)
 
 	// Convert it.
 	outPath := filepath.Join(stagingOutputFolder, hlsFilename)
@@ -67,11 +60,11 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 
 	// Success!
 	log.Println("Success! Removing original.")
-	goodTitle := sanitiseForFilesystem(omdbMovie.Title) + " " + omdbMovie.Year
+	goodTitle := sanitiseForFilesystem(tmdbMovie.Title) + " " + tmdbMovie.ReleaseDate[:4]
 	goodFolder := filepath.Join(paths.Movies, goodTitle)
 	os.Rename(stagingOutputFolder, goodFolder) // Move the HLS across.
 	os.Remove(inPath)                          // Remove the original file.
-	// Assumption is that the user ripped their original from their DVD so doesn't care to lose it.
+	// Assumption is that the user made a backup of their original from their DVD so doesn't care to lose it.
 
 	generateMetadata(paths)
 
