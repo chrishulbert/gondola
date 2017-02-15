@@ -27,6 +27,7 @@ type MovieMetadata struct {
 	Backdrop    string
 	ReleaseDate string
 	Vote        float32
+	Media       string
 }
 
 type TVShowMetadata struct {
@@ -150,6 +151,7 @@ func generateMetadata(paths Paths) {
 		// Create the model.
 		image, _ := filepath.Rel(paths.Root, filepath.Join(folder, imageFilename))
 		backdrop, _ := filepath.Rel(paths.Root, filepath.Join(folder, imageBackdropFilename))
+		media, _ := filepath.Rel(paths.Root, filepath.Join(folder, hlsFilename))
 		movie := MovieMetadata{
 			TMDBId:      details.Id,
 			Name:        details.Title,
@@ -158,6 +160,7 @@ func generateMetadata(paths Paths) {
 			Backdrop:    backdrop,
 			ReleaseDate: details.ReleaseDate,
 			Vote:        details.VoteAverage,
+			Media:       media,
 		}
 		movies = append(movies, movie)
 	}
