@@ -141,9 +141,10 @@ WantedBy=multi-user.target
 	* `sudo apt-get install nginx`
 	* `sudo nano /etc/nginx/sites-available/default`
 		* Find 'root /var/www/html;' and change line to: `root /media/gondola/KRYTEN/Gondola;` - customise the path to suit where your hard drive mounts.
+	* `sudo nano /etc/nginx/nginx.conf`
+		* Find `user www-data;` and change to `user gondola;` - this allows nginx to read your external HDD.
 	* `sudo nginx -s reload` <- restart nginx.
 	* Open [http://gondola](http://gondola) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and you should see something!
-	TODO figure this out
 	* Check your nginx logs if something fails: `cat /var/log/nginx/error.log`
 * Upload your first media:
 	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc. Cyberduck is also popular.
