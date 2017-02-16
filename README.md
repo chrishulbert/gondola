@@ -91,7 +91,69 @@ You should now be able to SSH in from your Mac/PC with the following terminal co
 
     ssh gondola@gondola
 
-If that succeeded, you may now connect your laptop to power, close the lid, and tuck it away somewhere with a bit of clear airflow, and follow the remaining instructions using SSH.
+If that succeeded, you may now connect your laptop to power, close the lid, and tuck it away somewhere with a bit of clear airflow, and follow the remaining instructions using remote SSH:
+
+* Install go:
+	* `sudo apt-get install git`
+	* You'll need latest golang, the normal version won't compile with this error: `No such file or directory: textflag.h`
+		* `sudo nano /etc/apt/sources.list`
+			* Add a line: `deb http://httpredir.debian.org/debian experimental main`
+			* Add a line: `deb http://httpredir.debian.org/debian unstable main`
+		* `sudo apt-get update`
+		* `sudo apt-get install golang`
+	* `nano ~/.bash_profile`
+		* add `export GOPATH=$HOME/go`
+	* `source ~/.bash_profile` <- reload the profile
+	* `env | grep go` <- test it worked
+* Allow password-less sudo access to `lsof` so Gondola can use it to determine when uploads are complete:
+	* `sudo apt-get install lsof` <- If lsof isn't already installed.
+	* `sudo visudo -f /etc/sudoers.d/lsof`
+		* add `gondola ALL = (root) NOPASSWD: /usr/bin/lsof`
+* Now install ffmpeg:
+	* `sudo apt-get install ffmpeg`
+* Now we can install Gondola:
+	* `go get github.com/chrishulbert/gondola`
+	* Add a configuration file:
+		* `nano ~/.gondola`
+		* Paste: `root = "/media/gondola/KRYTEN/Gondola"`, customising the path to suit where your external drive mounts, save and quit.
+	* Test it: `~/go/bin/gondola` <- it should say 'Watching for changes'. Do Ctrl+C to close.
+* Make it run as a service:
+	* `sudo nano /lib/systemd/system/gondola.service`
+	* Paste the following:
+
+[Unit]
+Description=Gondola media server
+
+[Service]
+PIDFile=/tmp/gondola.pid
+User=gondola
+Group=gondola
+ExecStart=/home/gondola/go/bin/gondola
+
+[Install]
+WantedBy=multi-user.target
+
+	* `sudo systemctl enable gondola` <- make it run on boot
+	* `sudo systemctl start gondola` <- make it start now
+	* `systemctl status gondola` <- it should be 'active (running)'
+	* `sudo journalctl -u gondola` <- view its logs, should say 'watching for changes'
+* Install Nginx:
+	* `sudo apt-get install nginx`
+	* `sudo nano /etc/nginx/sites-available/default`
+		* Find 'root /var/www/html;' and change line to: `root /media/gondola/KRYTEN/Gondola;` - customise the path to suit where your hard drive mounts.
+	* `sudo nginx -s reload` <- restart nginx.
+	* Open [http://gondola](http://gondola) in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and you should see something!
+	TODO figure this out
+	* Check your nginx logs if something fails: `cat /var/log/nginx/error.log`
+* Upload your first media:
+	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc. Cyberduck is also popular.
+	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola; Username: chip; Password: chip; Remote path: /media/usb/Gondola
+	* Connect, and drop something into `New/TV` or `New/Movies`, as per the file naming conventions described elsewhere here.
+	* Check the logs on your Chip using `sudo journalctl -u gondola | tail`.
+	* Have a look in the `Gondola/Staging` folder while it works.
+	* Wait a (long) while for it to convert... For an idea, a 2 hour 1080p movie took over a day.
+	* While it's converting you can use `top` to see that ffmpeg is hogging the CPU. Once it disappears from top, you'll know it's done.
+	* Open [http://gondola](http://gondola) in Safari and you should be golden!
 
 ## Installation on a CHIP
 
