@@ -69,7 +69,35 @@ But it forces you to confirm it guessed correctly: the file is renamed to the be
 
 The name is a (tortured) metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
 
+## Installation on a laptop
+
+I recommend this approach nowadays, after having issues with unreliable single-board-computers.
+
+Get a second hand laptop (you may have one lying around?). I bought a second hand HP Stream 11 for $120 - I recommend this laptop because it's cheap, small, fanless thus silent, and has a small power adapter thus won't use much electricity.
+
+Install Ubuntu. In the installer, set the computer name to 'gondola', and the user 'gondola'.
+
+If you use an HP Stream, some good instructions for installing and tweaking Ubuntu are [here](http://bernaerts.dyndns.org/linux/74-ubuntu/343-ubuntu-install-hp-stream-13).
+
+In Ubuntu settings > Power, under 'when the lid is closed', set it to 'do nothing'. Now your laptop will continue running as a server when closed.
+
+Connect your external hard drive (my laptop has one USB3 port and one USB2 - ensure you connect to the faster one). Find where it mounts: in my case, it mounts at /media/gondola/KRYTEN. (Kryten is the name of my external drive).
+
+In the terminal, run the following:
+
+    sudo apt-get install openssh-server
+
+You should now be able to SSH in from your Mac/PC with the following terminal command:
+
+    ssh gondola@gondola
+
+If that succeeded, you may now connect your laptop to power, close the lid, and tuck it away somewhere with a bit of clear airflow, and follow the remaining instructions using SSH.
+
 ## Installation on a CHIP
+
+I don't really recommend using a CHIP, as I tried for quite a while to get this working, and gave up after
+intermittent brownouts and the NVRAM being corrupted (apparently later versions don't have this latter problem)
+then the chip wouldn't restart. If you'd like to try, however, I'll leave these instructions here:
 
 * Buy a chip from [getchip.com](https://getchip.com/pages/store)
 * Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
