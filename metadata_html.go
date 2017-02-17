@@ -58,7 +58,7 @@ const (
 	<h3>
 		Gondola made with &hearts; by <a href="http://www.splinter.com.au">Chris Hulbert</a>
 		<br />
-		<a href="http://gondolamedia.com">gondolamedia.com</a>
+		<a href="http://www.splinter.com.au/gondola">splinter.com.au/gondola</a>
 		<br />
 		<small><a href="javascript:alert('CAPACITY')">Usage</a></small>
 		<br />
