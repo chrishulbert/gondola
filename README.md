@@ -49,9 +49,9 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big Buck Bunny 2008 1080p blah.vob
 	* Big.Buck.Bunny.vob
 
-If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search OMDB for the movie metadata.
+If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search TMDB for the movie metadata.
 
-If it cannot find a year, it still searches OMDB to find the movie, but it stands less of a chance finding the correct movie if there's no year.
+If it cannot find a year, it still searches TMDB to find the movie, but it stands less of a chance finding the correct movie if there's no year.
 
 For TV shows placed in `New/TV` folder, use the following:
 
@@ -59,7 +59,7 @@ For TV shows placed in `New/TV` folder, use the following:
 	* Some TV Show S01E02 Blah blah blah.vob
 	* Some TV Show - Episode Name.vob
 
-So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's title is to the left, and ignores anything to the right. It then searches OMDB to find the show's metadata.
+So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's title is to the left, and ignores anything to the right. It then searches TMDB to find the show's metadata.
 
 If you use the last format (eg there's no SxEy, and there is a `-`), it takes a 'best guess' at which season and episode it is. This is useful for shows where the DVD order is different to the TV order. I actually recommend using this when you make backups of your DVDs. The episode name doesn't need to be an exact match, because it does a 'Levenshtein distance' calculation to make a best guess at which episode it is.
 
@@ -324,3 +324,9 @@ kill it: kill 95401
 #### Docker:
 
 I've tried to make this work with Docker, however Gondola needs root access to detect if any other processes are writing to files in the New folder, so I don't recommend spending time investigating this unless you find a solution to that.
+
+## Acknowledgements
+
+This product uses the <a href="https://www.themoviedb.org">TMDb</a> API but is not endorsed or certified by TMDb.
+
+Some icons from Icons8.com
