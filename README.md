@@ -285,6 +285,14 @@ Good luck.
 
 ### Other tips
 
+#### Transcoding:
+
+Gondola reduces 5.1 to stereo (with some trickery to ensure the sub channel isn't lost). This is to save space and for simpler playback on my stereo system.
+
+If you upload a huge VOB, don't worry: gondola compresses to a reasonable size during the HLS conversion process.
+
+Speed-wise, converting an average length (90min) 1080p movie takes 7 hours 30 mins on an HP Stream 11. On a GetCHIP, it takes around 20 hours.
+
 #### Viewing logs:
 
     sudo journalctl -u gondola
