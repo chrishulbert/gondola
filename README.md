@@ -89,7 +89,7 @@ In the terminal, run the following:
 
 You should now be able to SSH in from your Mac/PC with the following terminal command:
 
-    ssh gondola@gondola
+    ssh gondola@gondola.local
 
 If that succeeded, you may now connect your laptop to power, close the lid, and tuck it away somewhere with a bit of clear airflow, and follow the remaining instructions using remote SSH:
 
@@ -121,17 +121,17 @@ If that succeeded, you may now connect your laptop to power, close the lid, and 
 	* `sudo nano /lib/systemd/system/gondola.service`
 	* Paste the following:
 
-[Unit]
-Description=Gondola media server
+	[Unit]
+	Description=Gondola media server
 
-[Service]
-PIDFile=/tmp/gondola.pid
-User=gondola
-Group=gondola
-ExecStart=/home/gondola/go/bin/gondola
+	[Service]
+	PIDFile=/tmp/gondola.pid
+	User=gondola
+	Group=gondola
+	ExecStart=/home/gondola/go/bin/gondola
 
-[Install]
-WantedBy=multi-user.target
+	[Install]
+	WantedBy=multi-user.target
 
 	* `sudo systemctl enable gondola` <- make it run on boot
 	* `sudo systemctl start gondola` <- make it start now
@@ -149,13 +149,13 @@ WantedBy=multi-user.target
 * Upload your first media:
 	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc. Cyberduck is also popular.
 	* To make backups of your DVDs, I recommend [dvdbackup](https://wiki.archlinux.org/index.php/dvdbackup).
-	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola; Username: chip; Password: chip; Remote path: /media/usb/Gondola
+	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola.local; Username: gondola; Password: gondola; Remote path: /media/gondola/KRYTEN/Gondola
 	* Connect, and drop something into `New/TV` or `New/Movies`, as per the file naming conventions described elsewhere here.
 	* Check the logs on your Chip using `sudo journalctl -u gondola | tail`.
 	* Have a look in the `Gondola/Staging` folder while it works.
 	* Wait a (long) while for it to convert... For an idea, a 2 hour 1080p movie took over a day.
 	* While it's converting you can use `top` to see that ffmpeg is hogging the CPU. Once it disappears from top, you'll know it's done.
-	* Open [http://gondola](http://gondola) in Safari and you should be golden!
+	* Open [http://gondola.local](http://gondola.local) in Safari and you should be golden!
 
 ## Installation on a CHIP
 
