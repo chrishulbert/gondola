@@ -148,6 +148,7 @@ WantedBy=multi-user.target
 	* Check your nginx logs if something fails: `cat /var/log/nginx/error.log`
 * Upload your first media:
 	* I recommend using [ForkLift](http://www.binarynights.com/Forklift/), but you can use any SCP-capable app on your mac/pc. Cyberduck is also popular.
+	* To make backups of your DVDs, I recommend [dvdbackup](https://wiki.archlinux.org/index.php/dvdbackup).
 	* Go to favourites, click '+'. Protocol: 'SFTP'; Name: Gondola; Server: gondola; Username: chip; Password: chip; Remote path: /media/usb/Gondola
 	* Connect, and drop something into `New/TV` or `New/Movies`, as per the file naming conventions described elsewhere here.
 	* Check the logs on your Chip using `sudo journalctl -u gondola | tail`.
