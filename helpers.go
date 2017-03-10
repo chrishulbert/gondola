@@ -10,7 +10,16 @@ import (
 
 // Sanitises to make a filesystem-safe name.
 func sanitiseForFilesystem(s string) string {
-	return strings.Replace(s, "/", "-", -1)
+	s = strings.Replace(s, "/", "-", -1) // For linux.
+	s = strings.Replace(s, "<", "-", -1) // For windows or FAT disks on linux.
+	s = strings.Replace(s, ">", "-", -1)
+	s = strings.Replace(s, ":", "-", -1)
+	s = strings.Replace(s, "\"", "-", -1)
+	s = strings.Replace(s, "\\", "-", -1)
+	s = strings.Replace(s, "|", "-", -1)
+	s = strings.Replace(s, "?", "-", -1)
+	s = strings.Replace(s, "*", "-", -1)
+	return s
 }
 
 func getImageIfNeeded(image string, size string, folder string, filename string) {
