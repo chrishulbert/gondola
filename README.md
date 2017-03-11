@@ -31,7 +31,7 @@ wait until transfer has complete to begin importing it automatically.
 
 ## Config
 
-Configuration is compulsory, and goes into ~/.gondola
+Configuration is compulsory, and goes into `~/.gondola`
 
 It uses TOML format (same as windows INI files). Options include:
 
@@ -121,17 +121,17 @@ If that succeeded, you may now connect your laptop to power, close the lid, and 
 	* `sudo nano /lib/systemd/system/gondola.service`
 	* Paste the following:
 
-	[Unit]
-	Description=Gondola media server
+		[Unit]
+		Description=Gondola media server
 
-	[Service]
-	PIDFile=/tmp/gondola.pid
-	User=gondola
-	Group=gondola
-	ExecStart=/home/gondola/go/bin/gondola
+		[Service]
+		PIDFile=/tmp/gondola.pid
+		User=gondola
+		Group=gondola
+		ExecStart=/home/gondola/go/bin/gondola
 
-	[Install]
-	WantedBy=multi-user.target
+		[Install]
+		WantedBy=multi-user.target
 
 	* `sudo systemctl enable gondola` <- make it run on boot
 	* `sudo systemctl start gondola` <- make it start now
@@ -140,7 +140,7 @@ If that succeeded, you may now connect your laptop to power, close the lid, and 
 * Install Nginx:
 	* `sudo apt-get install nginx`
 	* `sudo nano /etc/nginx/sites-available/default`
-		* Find 'root /var/www/html;' and change line to: `root /media/gondola/KRYTEN/Gondola;` - customise the path to suit where your hard drive mounts.
+		* Find `root /var/www/html;` and change line to: `root /media/gondola/KRYTEN/Gondola;` - customise the path to suit where your hard drive mounts.
 	* `sudo nano /etc/nginx/nginx.conf`
 		* Find `user www-data;` and change to `user gondola;` - this allows nginx to read your external HDD.
 	* `sudo nginx -s reload` <- restart nginx.
@@ -184,8 +184,16 @@ then the chip wouldn't restart. If you'd like to try, however, I'll leave these 
 * Connecting to the Chip's USB input limits it to pulling 500mA, because the Chip's designers didn't want it to short-circuit people's laptops by pulling too much current. But this means it cannot reliably power an external USB flash drive. You have some options here:
 	* You can use a powered USB hub to supply power to your storage drive.
 	* If you strip a (good quality) USB cable and connect to CHG-IN(+) and GND(-) on the Chip, it will pull more power. You'll need to plug into a good quality 10 Watt or 2 Amp power adaptor (such as an iPad charger).
-	* You can also try the 'no limit' version of the Chip OS on flash.getchip.com, for the same effect as the above option without stripping wires - I haven't tried this.
+	* You can also try the 'no limit' setting, for the same effect as the above option without stripping wires:
+
+	sudo axp209 --no-limit
+	sudo apt-get update
+	sudo apt-get upgrade
+	sudo systemctl enable no-limit
+	sudo reboot
+
 	* Use a battery backup for load spikes, I believe [this will plug directly into the Chip](https://www.sparkfun.com/products/8483).
+	* I've also tried soldering a capacitor between the +5V line on the USB and the ground to handle any current spikes. Only do this if you're confident!
 * Whichever option above you choose, ensure you use a quality usb power supply (eg an apple/samsung genuine one). The cheap ones have uneven voltages and don't supply the promised amps, and your hardware will be flaky as a result (random crashes / data corruption). Also make sure you use a good quality USB cable, because the cheap ones don't have thick enough copper to deliver the necessary amps.
 * Connect a large capacity USB drive to your Chip that you're happy to erase and reformat, and we'll configure it next. Make sure you've addressed your power sourcing in the steps above before you connect a drive or you'll get brownouts.
 * Formatting steps:
@@ -250,17 +258,17 @@ then the chip wouldn't restart. If you'd like to try, however, I'll leave these 
 	* `sudo nano /lib/systemd/system/gondola.service`
 	* Paste the following:
 
-	[Unit]
-	Description=Gondola media server
+		[Unit]
+		Description=Gondola media server
 
-	[Service]
-	PIDFile=/tmp/gondola.pid
-	User=chip
-	Group=chip
-	ExecStart=/home/chip/go/bin/gondola
+		[Service]
+		PIDFile=/tmp/gondola.pid
+		User=chip
+		Group=chip
+		ExecStart=/home/chip/go/bin/gondola
 
-	[Install]
-	WantedBy=multi-user.target
+		[Install]
+		WantedBy=multi-user.target
 
 	* `sudo systemctl enable gondola` <- make it run on boot
 	* `sudo systemctl start gondola` <- make it start now
