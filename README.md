@@ -120,18 +120,20 @@ If that succeeded, you may now connect your laptop to power, close the lid, and 
 * Make it run as a service:
 	* `sudo nano /lib/systemd/system/gondola.service`
 	* Paste the following:
-
-		[Unit]
-		Description=Gondola media server
-
-		[Service]
-		PIDFile=/tmp/gondola.pid
-		User=gondola
-		Group=gondola
-		ExecStart=/home/gondola/go/bin/gondola
-
-		[Install]
-		WantedBy=multi-user.target
+	
+	    ```
+        [Unit]
+        Description=Gondola media server
+	 
+	    [Service]
+        PIDFile=/tmp/gondola.pid
+        User=gondola
+        Group=gondola
+        ExecStart=/home/gondola/go/bin/gondola
+	    
+        [Install]
+        WantedBy=multi-user.target
+		```
 
 	* `sudo systemctl enable gondola` <- make it run on boot
 	* `sudo systemctl start gondola` <- make it start now
