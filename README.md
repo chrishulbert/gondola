@@ -69,6 +69,16 @@ But it forces you to confirm it guessed correctly: the file is renamed to the be
 
 The name is a (tortured) metaphor: A real gondola transports you down a stream; this Gondola transports your media by streaming it ;)
 
+## Installation on an Orange Pi PC
+
+An Orange Pi PC is a good choice because it has 1GB RAM, which is enough for 1080p transcoding; and it has a good power supply thus can power an external USB HDD.
+
+* Buy one: http://www.orangepi.org/orangepipc/
+* Grab the software. Go here, I'm trying one of the 'nightly releases' because 3.x apparently has out-of-memory bugs: https://www.armbian.com/orange-pi-pc/
+* Grab a name-brand SD card, 4GB will be fine, 2GB might be worth trying if you have one lying around (FWIW mine uses 1.6G once all configured).
+	* Did i say make sure it's a name-brand one? Avoid ebay.
+* TODO more details on Orange Pi to come...
+
 ## Installation on a laptop
 
 I recommend this approach nowadays, after having issues with unreliable single-board-computers.
@@ -161,9 +171,7 @@ If that succeeded, you may now connect your laptop to power, close the lid, and 
 
 ## Installation on a CHIP
 
-I don't really recommend using a CHIP, as I tried for quite a while to get this working, and gave up after
-intermittent brownouts and the NVRAM being corrupted (apparently later versions don't have this latter problem)
-then the chip wouldn't restart. If you'd like to try, however, I'll leave these instructions here:
+I don't really recommend using a CHIP, as I find it simply transcodes too slowly (13 hours to transcode 1 hour of movie). But if you don't mind, here you go:
 
 * Buy a chip from [getchip.com](https://getchip.com/pages/store)
 * Flash it to the latest 'headless' version [here](http://flash.getchip.com/). Headless leaves more resources available for Gondola.
