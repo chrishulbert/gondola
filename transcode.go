@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -67,7 +66,7 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 					"-b:a", "64k", // CBR so it previews nicely on osx.
 					inPath + fmt.Sprintf(".AudioStream%d preview.mp3", stream.Index),
 				}
-				exec.Command("ffmpeg", args...).CombinedOutput() // TODO handle errors one day. This *should* work if probing succeeded earlier however.
+				ffmpeg(args) // TODO handle errors one day. This *should* work if probing succeeded earlier however.
 			}
 			// Rename it.
 			ext := filepath.Ext(inPath) // Eg '.vob'
@@ -140,7 +139,7 @@ func runConvertToHLS(inPath string, outPath string, audioStreamIndex int, videoS
 	}
 	lastArgs := []string{"-hls_list_size", "0", outPath}
 	allArgs := append(append(append(firstArgs, audioArgs...), videoArgs...), lastArgs...)
-	result, err := exec.Command("ffmpeg", allArgs...).CombinedOutput()
+	result, err := ffmpeg(allArgs)
 
 	// Print result if its an error.
 	if err != nil {
@@ -153,7 +152,7 @@ func runConvertToHLS(inPath string, outPath string, audioStreamIndex int, videoS
 	if err != nil && strings.Contains(string(result), "h264_mp4toannexb") {
 		log.Println("Attempting to convert to HLS using h264_mp4toannexb option")
 		allArgs := append(append(append(append(firstArgs, audioArgs...), videoArgs...), "-bsf:v", "h264_mp4toannexb"), lastArgs...)
-		result2, err2 := exec.Command("ffmpeg", allArgs...).CombinedOutput()
+		result2, err2 := ffmpeg(allArgs)
 
 		// Print result if its an error.
 		if err2 != nil {
@@ -164,4 +163,11 @@ func runConvertToHLS(inPath string, outPath string, audioStreamIndex int, videoS
 		return err2
 	}
 	return err
+}
+
+/// Runs FFMPEG, nicely, returning the stdout/stderr and any error.
+func ffmpeg(args []string) (string, error) {
+	nice := []string{"-n", "20", "ffmpeg"}
+	allArgs := append(nice, args...)
+	return execLog("nice", allArgs)
 }
