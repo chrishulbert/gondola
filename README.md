@@ -73,15 +73,96 @@ The name is a (tortured) metaphor: A real gondola transports you down a stream; 
 
 An Orange Pi PC is a good choice because it has 1GB RAM, which is enough for 1080p transcoding; and it has a good power supply thus can power an external USB HDD.
 
-* Buy one: http://www.orangepi.org/orangepipc/
-* Grab the software. Go here, I'm trying one of the 'nightly releases' because 3.x apparently has out-of-memory bugs: https://www.armbian.com/orange-pi-pc/
-* Grab a name-brand SD card, 4GB will be fine, 2GB might be worth trying if you have one lying around (FWIW mine uses 1.6G once all configured).
-	* Did i say make sure it's a name-brand one? Avoid ebay.
-* TODO more details on Orange Pi to come...
+* Buy stuff!
+	* The Orange Pi itself: http://www.orangepi.org/orangepipc/
+	* Buy a small self adhesive heatsink from eBay, and stick it on the Orange Pi's main chip.
+	* Grab a name-brand SD card, 4GB will be fine, 2GB might be worth trying if you have one lying around (FWIW mine uses 1.6G once all configured).
+		* Did i say make sure it's a name-brand one? Avoid eBay unless you're very sure its a genuine card.
+* I power mine using a USB -> OrangePi barrel connector cable, connected to a 5V 2A iPad wall charger, and recommend a similar setup.
+* Install the operating system:
+	* Grab the software from here, I'm trying one of the 4.x 'nightly releases' because 3.x apparently has out-of-memory bugs, prefer the 'server' builds if you get a choice: https://www.armbian.com/orange-pi-pc/
+	* Extract the 7z file using eg The Unarchiver from the mac app store
+	* Copy the IMG file onto your sd card using Etcher.io
+* Plug the card into your Orange Pi, and plug it into your TV & Ethernet & Keyboard & Power
+	* Login as 'root' password '1234'
+	* Change root password when prompted to 'gondola1'
+	* Follow the steps to create the 'gondola' user
+	* `sudo apt-get update` <- If you get a lock error, wait 5 mins and try again, it might be auto-updating.
+	* `sudo apt-get install avahi-daemon` <- This gets bonjour working, so macs can find it.
+	* `sudo nano /etc/hostname` <- change the host name 'gondola'.
+	* `sudo nano /etc/hosts` <- change 'orangepipc' to 'gondola' in this file.
+	* `sudo reboot now` <- applies the hostname change.
+* Login remotely now and continue configuring:
+	* `ssh gondola@gondola.local` <- login from your mac.
+	* `sudo dpkg-reconfigure tzdata` <- set up the timezones.
+* Configure the external USB hard drive:
+	* `sudo mkdir /media/usb` <- Make a mount point for the external hdd.
+	* `sudo chown gondola /media/usb` <- Set the permissions for the mount.
+	* `sudo chgrp gondola /media/usb`
+	* `sudo nano /etc/fstab` <- Configure the auto-mount.
+		* Add the line `/dev/sda1 /media/usb auto defaults,noatime,uid=gondola,gid=gondola 0 0`
+		* Note: `noatime` above makes it not write an updated time when you read, which is faster and causes less wear if it's a flash drive.
+		* Note: `uid=gondola,gid=gondola` gives the proper permissions if it's a FAT drive.
+	* `sudo mount -a` <- Auto mount.
+* Install stuff:
+	* Enable non-ancient apt (mainly for golang): `sudo nano /etc/apt/sources.list`
+	  * Add: `deb http://httpredir.debian.org/debian experimental main`
+	  * Add: `deb http://httpredir.debian.org/debian unstable main`
+	* Install lots of stuff: `sudo apt-get install git golang lsof ffmpeg nginx`
+* Configure Go:
+  * `nano ~/.bash_profile`
+	  * Add a line: `export GOPATH=$HOME/go`
+  * `source ~/.bash_profile` <- reload the profile
+	* `env | grep go` <- test it worked
+*  Allow password-less sudo access to lsof so Gondola can use it to determine when uploads are complete:
+	* `sudo visudo -f /etc/sudoers.d/lsof`
+  * Add a line: `gondola ALL = (root) NOPASSWD: /usr/bin/lsof`
+* Install Gondola itself:
+	* `go get github.com/chrishulbert/gondola`
+  * Add a configuration file:
+		* `nano ~/.gondola`
+		* Paste `root = "/media/usb/Gondola"`
+  * Test it: `~/go/bin/gondola` <- it should say 'Watching for changes'. Do Ctrl+C to close.
+	* Make it run as a service:
+		* `sudo nano /lib/systemd/system/gondola.service`
+		* Paste the following:
+
+		    ```
+	        [Unit]
+	        Description=Gondola media server
+
+		    [Service]
+	        PIDFile=/tmp/gondola.pid
+	        User=gondola
+	        Group=gondola
+	        ExecStart=/home/gondola/go/bin/gondola
+
+	        [Install]
+	        WantedBy=multi-user.target
+			```
+
+		* `sudo systemctl enable gondola` <- make it run on boot
+		* `sudo systemctl start gondola` <- make it start now
+		* `systemctl status gondola` <- it should be 'active (running)'
+		* `sudo journalctl -u gondola` <- use this to view Gondola's logs, should say 'watching for changes'
+* Configure Nginx:
+  * `sudo nano /etc/nginx/sites-available/default`
+    * Find `root /var/www/html;` and change line to: `root /media/usb/Gondola;` <- customise the path to suit where your hard drive mounts
+  * `sudo nano /etc/nginx/nginx.conf`
+    * Find `user www-data;` and change to `user gondola;` <- this allows nginx to read your external HDD
+	* `sudo nginx -s reload` <- apply the nginx config changes.
+  * Open http://gondola.local in Safari on your Mac/iPhone/iPad (Chrome doesn't support HLS) and you should see something!
+  * Check your Nginx logs if something fails: `sudo cat /var/log/nginx/error.log`
+* Final notes:
+	* The Orange Pi PC takes 8.7h per hour of movie to transcode
+	* Easy log access:
+		* `nano ~/.bash_profile`
+		* Add `alias l="sudo journalctl -u gondola | tail -n 100"`
+		* `source ~/.bash_profile`
+		* Then run `l` anytime you want to see the gondola logs.
+	* Good luck!
 
 ## Installation on a laptop
-
-I recommend this approach nowadays, after having issues with unreliable single-board-computers.
 
 Get a second hand laptop (you may have one lying around?). I bought a second hand HP Stream 11 for $120 - I recommend this laptop because it's cheap, small, fanless thus silent, and has a small power adapter thus won't use much electricity.
 
