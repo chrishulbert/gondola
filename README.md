@@ -76,6 +76,7 @@ An Orange Pi PC is a good choice because it has 1GB RAM, which is enough for 108
 * Buy stuff!
 	* The Orange Pi itself: http://www.orangepi.org/orangepipc/
 	* Buy a small self adhesive heatsink from eBay, and stick it on the Orange Pi's main chip.
+		* Search eBay for `22x22x25mm adhesive heatsink`
 	* Grab a name-brand SD card, 4GB will be fine, 2GB might be worth trying if you have one lying around (FWIW mine uses 1.6G once all configured).
 		* Did i say make sure it's a name-brand one? Avoid eBay unless you're very sure its a genuine card.
 * I power mine using a USB -> OrangePi barrel connector cable, connected to a 5V 2A iPad wall charger, and recommend a similar setup.
