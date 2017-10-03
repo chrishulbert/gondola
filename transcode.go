@@ -108,8 +108,12 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 
 	// Figure out what to do with the video.
 	videoStream := videoStreams[0]
+	deinterlace := needsDeinterlacingFromFile(inPath)
 	var videoArgs []string
-	if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" {
+	if deinterlace {
+		log.Println("Video is to be deinterlaced")
+		videoArgs = []string{"-vf", "yadif"}
+	} else if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" {
 		// Can only direct copy if not avc1, or it won't be a seekable video.
 		log.Println("Eligible for video not being transcoded, so no quality loss :)")
 		videoArgs = []string{"-vcodec", "copy"}

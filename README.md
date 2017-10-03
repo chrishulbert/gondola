@@ -48,10 +48,13 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big.Buck.Bunny.2008.1080p.blah.vob
 	* Big Buck Bunny 2008 1080p blah.vob
 	* Big.Buck.Bunny.vob
+	* Big.Buck.Bunny.2008.deinterlace.vob
 
 If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search TMDB for the movie metadata.
 
 If it cannot find a year, it still searches TMDB to find the movie, but it stands less of a chance finding the correct movie if there's no year.
+
+If it finds 'deinterlace' then it uses FFMPEG to deinterlace the video. This is useful for old DVDs.
 
 For TV shows placed in `New/TV` folder, use the following:
 
