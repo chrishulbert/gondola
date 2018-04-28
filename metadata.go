@@ -36,13 +36,13 @@ type TVShowMetadata struct {
 	Overview     string
 	Image        string
 	Backdrop     string
-	FirstAirDate string
+	FirstAirDate string `json:"first_air_date"` // For backwards compatability with TMDB-metadata.
 	Seasons      []TVSeasonMetadata
 }
 
 type TVSeasonMetadata struct {
 	TVDBId   int
-	Season   int
+	Season   int `json:"season_number"` // For backwards compatability with TMDB-metadata.
 	Name     string
 	Image    string
 	Episodes []TVEpisodeMetadata
@@ -50,12 +50,12 @@ type TVSeasonMetadata struct {
 
 type TVEpisodeMetadata struct {
 	TVDBId   int
-	Episode  int
+	Episode  int `json:"episode_number"` // For backwards compatability with TMDB-metadata.
 	Name     string
 	Overview string
 	Image    string
 	Media    string
-	AirDate  string
+	AirDate  string `json:"air_date"` // For backwards compatability with TMDB-metadata.
 }
 
 // Generates metadata for everything.
