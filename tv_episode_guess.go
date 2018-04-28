@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/xrash/smetrics"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/xrash/smetrics"
 )
 
 type GuessEpisode struct {
@@ -39,34 +40,34 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 
 	// Search for the id.
 	log.Println("Fetching all episodes metadata for show", showTitleFromFile)
-	tmdbId, tmdbIdErr := requestTmdbTVSearch(showTitleFromFile)
-	if tmdbIdErr != nil {
+	seriesId := tvdbSearchForSeries(showTitleFromFile)
+	if seriesId <= 0 {
 		log.Println("Could not find TV show for", showTitleFromFile)
-		return tmdbIdErr
+		return errors.New("Series search")
 	}
 
 	// Get show details.
-	tmdbSeries, _, tmdbSeriesErr := requestTmdbTVShowDetails(tmdbId)
-	if tmdbSeriesErr != nil {
+	series, seriesErr := tvdbSeriesDetails(seriesId)
+	if seriesErr != nil {
 		log.Println("Could not get TV show metadata for", showTitleFromFile)
-		return tmdbSeriesErr
+		return seriesErr
 	}
 
 	allEpisodes := make([]GuessEpisode, 0)
 
 	// Find all seasons.
-	for _, season := range tmdbSeries.Seasons {
+	for _, sparseSeason := range series.Seasons {
 
-		tmdbSeason, _, tmdbSeasonErr := requestTmdbTVSeason(tmdbId, season.SeasonNumber)
-		if tmdbSeasonErr != nil {
+		fatSeason, seasonErr := tvdbSeasonDetails(seriesId, sparseSeason.TVDBID, sparseSeason.Season)
+		if seasonErr != nil {
 			log.Println("Could not get season metadata for", showTitleFromFile)
-			return tmdbSeasonErr
+			return seasonErr
 		}
 
-		for _, episode := range tmdbSeason.Episodes {
+		for _, episode := range fatSeason.Episodes {
 			guess := GuessEpisode{
 				Season:  episode.SeasonNumber,
-				Episode: episode.EpisodeNumber,
+				Episode: episode.Episode,
 				Name:    episode.Name,
 			}
 			allEpisodes = append(allEpisodes, guess)
@@ -100,7 +101,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 
 	// Rename it and succeed.
 	sxex := fmt.Sprintf("S%02dE%02d", closestGuess.Season, closestGuess.Episode)
-	newName := tmdbSeries.Name + " " + sxex + " " + closestGuess.Name + "." + file + ".remove if correct"
+	newName := series.Name + " " + sxex + " " + closestGuess.Name + "." + file + ".remove if correct"
 	os.Rename(filepath.Join(folder, file), filepath.Join(folder, newName))
 	log.Println("Guessed a file. You can remove the 'remove if correct' if you're happy with the guess.")
 	return nil
