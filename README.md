@@ -174,7 +174,7 @@ Install Ubuntu. In the installer, set the computer name to 'gondola', and the us
 
 If you use an HP Stream, some good instructions for installing and tweaking Ubuntu are [here](http://bernaerts.dyndns.org/linux/74-ubuntu/343-ubuntu-install-hp-stream-13).
 
-In Ubuntu settings > Power, under 'when the lid is closed', set it to 'do nothing'. Now your laptop will continue running as a server when closed.
+In Ubuntu settings > Power, under 'when the lid is closed', set it to 'do nothing'. Now your laptop will continue running as a server when closed. Update: In newer versions, you may follow the instructions here to do the same: https://askubuntu.com/a/372616/655394
 
 Connect your external hard drive (my laptop has one USB3 port and one USB2 - ensure you connect to the faster one). Find where it mounts: in my case, it mounts at /media/gondola/KRYTEN. (Kryten is the name of my external drive).
 
