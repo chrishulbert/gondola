@@ -94,19 +94,21 @@ func unescapeTrim(str string) string {
 	return strings.TrimSpace(html.UnescapeString(str))
 }
 
+// Some of these fields below have json names for compatability with old TMDB metadata.
+
 type TVDBSeries struct {
 	TVDBID       int // Eg 55271 - thetvdb id
 	Name         string
 	Overview     string
 	Art          string // The 16:9 background full url.
 	Poster       string // The portrait dvd cover full url.
-	FirstAirDate string
+	FirstAirDate string `json:"first_air_date"`
 	Seasons      []TVDBSeason
 }
 
 type TVDBSeason struct {
 	TVDBID int    // Eg 55271 - thetvdb id
-	Season int    // Eg 1,2,3, or 0 for specials
+	Season int    `json:"season_number"` // Eg 1,2,3, or 0 for specials
 	Name   string // Eg 'Specials' or 'Season 1'
 	/// Following are only filled in when requesting season details.
 	Episodes []TVDBEpisode
@@ -178,9 +180,9 @@ func tvdbSeriesDetails(id int) (TVDBSeries, error) {
 type TVDBEpisode struct {
 	TVDBID       int
 	SeasonNumber int
-	Episode      int
+	Episode      int `json:"episode_number"`
 	Name         string
-	AirDate      string
+	AirDate      string `json:"air_date"`
 	// Following are empty until you ask for episode details.
 	Overview string
 	Image    string // full url.
