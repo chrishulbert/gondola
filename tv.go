@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -102,10 +104,12 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	seasonFolder := filepath.Join(showFolder, tvSeasonFolderNameFor(seasonNumber))
 	episodeFolder := filepath.Join(seasonFolder, tvFolderNameFor(seasonNumber, episodeNumber, episode.Name))
 	os.MkdirAll(episodeFolder, os.ModePerm)
-	// TODO something here
-	// ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
-	// ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
-	// ioutil.WriteFile(filepath.Join(episodeFolder, metadataFilename), tmdbEpisodeData, os.ModePerm)
+	seriesData, _ := json.Marshal(series)
+	seasonData, _ := json.Marshal(season)
+	episodeData, _ := json.Marshal(episode)
+	ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), seriesData, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), seasonData, os.ModePerm)
+	ioutil.WriteFile(filepath.Join(episodeFolder, metadataFilename), episodeData, os.ModePerm)
 
 	// Get pics if needed.
 	getTVImageIfNeeded(series.Poster, showFolder, imageFilename)
