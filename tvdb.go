@@ -95,11 +95,13 @@ func unescapeTrim(str string) string {
 }
 
 type TVDBSeries struct {
-	Name    string
-	Details string
-	Art     string // The 16:9 background full url.
-	Poster  string // The portrait dvd cover full url.
-	Seasons []TVDBSeason
+	TVDBID       int // Eg 55271 - thetvdb id
+	Name         string
+	Overview     string
+	Art          string // The 16:9 background full url.
+	Poster       string // The portrait dvd cover full url.
+	FirstAirDate string
+	Seasons      []TVDBSeason
 }
 
 type TVDBSeason struct {
@@ -155,17 +157,20 @@ func tvdbSeriesDetails(id int) (TVDBSeries, error) {
 	posters := chop(resp, "<h1>Posters</h1>", "</div>")
 	posterFile := chop(posters, "<a href=\"banners/posters/", "\" target=\"_blank\">View Full Size")
 	posterURL := posterBaseURL + posterFile
+	firstAirDate := chop(resp, `<input type="text" name="FirstAired" value="`, `"`)
 	// The seasons.
 	seasons := seasonsForResponse(resp)
 	if name == "" || details == "" || len(seasons) == 0 {
 		return TVDBSeries{}, errors.New("Could not find series")
 	}
 	series := TVDBSeries{
-		Name:    name,
-		Details: details,
-		Art:     artURL,
-		Poster:  posterURL,
-		Seasons: seasons,
+		TVDBID:       id,
+		Name:         name,
+		Overview:     details,
+		Art:          artURL,
+		Poster:       posterURL,
+		FirstAirDate: firstAirDate,
+		Seasons:      seasons,
 	}
 	return series, nil
 }

@@ -31,36 +31,31 @@ type MovieMetadata struct {
 }
 
 type TVShowMetadata struct {
-	TMDBId       int
+	TVDBId       int
 	Name         string
 	Overview     string
 	Image        string
 	Backdrop     string
 	FirstAirDate string
-	LastAirDate  string
 	Seasons      []TVSeasonMetadata
 }
 
 type TVSeasonMetadata struct {
-	TMDBId   int
+	TVDBId   int
 	Season   int
 	Name     string
-	Overview string
 	Image    string
-	AirDate  string
 	Episodes []TVEpisodeMetadata
 }
 
 type TVEpisodeMetadata struct {
-	TMDBId         int
-	Episode        int
-	Name           string
-	Overview       string
-	Image          string
-	Media          string
-	AirDate        string
-	ProductionCode string
-	Vote           float32
+	TVDBId   int
+	Episode  int
+	Name     string
+	Overview string
+	Image    string
+	Media    string
+	AirDate  string
 }
 
 // Generates metadata for everything.
@@ -71,7 +66,7 @@ func generateMetadata(paths Paths) {
 	for _, showFolder := range directoriesIn(paths.TV) {
 
 		// Load the metadata.
-		var showDetails *TmdbTvShowDetails
+		var showDetails *TVDBSeries
 		if err := readAndUnmarshal(showFolder, metadataFilename, &showDetails); err != nil {
 			continue
 		}
@@ -80,35 +75,32 @@ func generateMetadata(paths Paths) {
 		image, _ := filepath.Rel(paths.Root, filepath.Join(showFolder, imageFilename))
 		backdrop, _ := filepath.Rel(paths.Root, filepath.Join(showFolder, imageBackdropFilename))
 		show := TVShowMetadata{
-			TMDBId:       showDetails.Id,
+			TVDBId:       showDetails.TVDBID,
 			Name:         showDetails.Name,
 			Overview:     showDetails.Overview,
 			Image:        image,
 			Backdrop:     backdrop,
 			FirstAirDate: showDetails.FirstAirDate,
-			LastAirDate:  showDetails.LastAirDate,
 		}
 
 		// Find the seasons.
 		for _, seasonFolder := range directoriesIn(showFolder) {
-			var seasonDetails *TmdbTvSeasonDetails
+			var seasonDetails *TVDBSeason
 			if err := readAndUnmarshal(seasonFolder, metadataFilename, &seasonDetails); err != nil {
 				continue
 			}
 
 			image, _ := filepath.Rel(paths.Root, filepath.Join(seasonFolder, imageFilename))
 			season := TVSeasonMetadata{
-				TMDBId:   seasonDetails.Id,
-				Season:   seasonDetails.SeasonNumber,
-				Name:     seasonDetails.Name,
-				Overview: seasonDetails.Overview,
-				Image:    image,
-				AirDate:  seasonDetails.AirDate,
+				TVDBId: seasonDetails.TVDBID,
+				Season: seasonDetails.Season,
+				Name:   seasonDetails.Name,
+				Image:  image,
 			}
 
 			// Find the episodes.
 			for _, epFolder := range directoriesIn(seasonFolder) {
-				var epDetails *TmdbTvEpisodeDetails
+				var epDetails *TVDBEpisode
 				if err := readAndUnmarshal(epFolder, metadataFilename, &epDetails); err != nil {
 					continue
 				}
@@ -116,15 +108,13 @@ func generateMetadata(paths Paths) {
 				image, _ := filepath.Rel(paths.Root, filepath.Join(epFolder, imageFilename))
 				media, _ := filepath.Rel(paths.Root, filepath.Join(epFolder, hlsFilename))
 				episode := TVEpisodeMetadata{
-					TMDBId:         epDetails.Id,
-					Episode:        epDetails.EpisodeNumber,
-					Name:           epDetails.Name,
-					Overview:       epDetails.Overview,
-					Image:          image,
-					Media:          media,
-					AirDate:        epDetails.AirDate,
-					ProductionCode: epDetails.ProductionCode,
-					Vote:           epDetails.VoteAverage,
+					TVDBId:   epDetails.TVDBID,
+					Episode:  epDetails.Episode,
+					Name:     epDetails.Name,
+					Overview: epDetails.Overview,
+					Image:    image,
+					Media:    media,
+					AirDate:  epDetails.AirDate,
 				}
 				season.Episodes = append(season.Episodes, episode)
 			}
