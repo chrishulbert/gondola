@@ -37,8 +37,8 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 	}
 
 	// Get the image.
-	getImageIfNeeded(tmdbMovie.PosterPath, "w780", stagingOutputFolder, imageFilename)
-	getImageIfNeeded(tmdbMovie.BackdropPath, "w1280", stagingOutputFolder, imageBackdropFilename)
+	getMovieImageIfNeeded(tmdbMovie.PosterPath, "w780", stagingOutputFolder, imageFilename)
+	getMovieImageIfNeeded(tmdbMovie.BackdropPath, "w1280", stagingOutputFolder, imageBackdropFilename)
 
 	// Convert it.
 	outPath := filepath.Join(stagingOutputFolder, hlsFilename)

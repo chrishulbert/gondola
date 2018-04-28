@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,7 +14,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	log.Println("Processing", file)
 
 	// Parse the title.
-	showTitleFromFile, season, episode, err := showSeasonEpisodeFromFile(file)
+	showTitleFromFile, seasonNumber, episodeNumber, err := showSeasonEpisodeFromFile(file)
 	if err != nil {
 
 		// Try to guess the season/ep if it's eg `Some TV Show - Episode Name.vob` format.
@@ -35,55 +34,84 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	// Get and save the show data. This has to happen for every episode so we can get the proper title name.
 
 	// Search for the id.
-	tmdbId, tmdbIdErr := requestTmdbTVSearch(showTitleFromFile)
-	if tmdbIdErr != nil {
+	seriesId := tvdbSearchForSeries(showTitleFromFile)
+	if seriesId <= 0 {
 		log.Println("Could not find TV show for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		return tmdbIdErr
+		return errors.New("Could not find TV show")
 	}
 
 	// Get show details.
-	tmdbSeries, tmdbSeriesData, tmdbSeriesErr := requestTmdbTVShowDetails(tmdbId)
-	if tmdbSeriesErr != nil {
+	series, seriesErr := tvdbSeriesDetails(seriesId)
+	if seriesErr != nil {
 		log.Println("Could not get TV show metadata for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		return tmdbSeriesErr
+		return seriesErr
+	}
+
+	// Find the season id.
+	seasonId := 0
+	for _, season := range series.Seasons {
+		if season.Season == seasonNumber {
+			seasonId = season.TVDBID
+		}
+	}
+	if seasonId <= 0 {
+		log.Println("Could not find season number", seasonNumber)
+		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+		os.Rename(inPath, failedPath)
+		return errors.New("Season number")
 	}
 
 	// Get season details.
-	tmdbSeason, tmdbSeasonData, tmdbSeasonErr := requestTmdbTVSeason(tmdbId, season)
-	if tmdbSeasonErr != nil {
+	season, seasonErr := tvdbSeasonDetails(seriesId, seasonId, seasonNumber)
+	if seasonErr != nil {
 		log.Println("Could not get season metadata for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		return tmdbSeasonErr
+		return seasonErr
+	}
+
+	// Find the episode ID.
+	episodeId := 0
+	for _, episode := range season.Episodes {
+		if episode.Episode == episodeNumber {
+			episodeId = episode.TVDBID
+		}
+	}
+	if episodeId <= 0 {
+		log.Println("Could not find episode id for ", showTitleFromFile)
+		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
+		os.Rename(inPath, failedPath)
+		return errors.New("Episode number")
 	}
 
 	// Get episode details.
-	tmdbEpisode, tmdbEpisodeData, tmdbEpisodeErr := requestTmdbTVEpisode(tmdbId, season, episode)
-	if tmdbEpisodeErr != nil {
+	episode, episodeErr := tvdbEpisodeDetails(seriesId, seasonId, seasonNumber, episodeId)
+	if episodeErr != nil {
 		log.Println("Could not get episode metadata for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
-		return tmdbEpisodeErr
+		return episodeErr
 	}
 
 	// Write the details.
-	showFolder := filepath.Join(paths.TV, sanitiseForFilesystem(tmdbSeries.Name))
-	seasonFolder := filepath.Join(showFolder, tvSeasonFolderNameFor(season))
-	episodeFolder := filepath.Join(seasonFolder, tvFolderNameFor(season, episode, tmdbEpisode.Name))
+	showFolder := filepath.Join(paths.TV, sanitiseForFilesystem(series.Name))
+	seasonFolder := filepath.Join(showFolder, tvSeasonFolderNameFor(seasonNumber))
+	episodeFolder := filepath.Join(seasonFolder, tvFolderNameFor(seasonNumber, episodeNumber, episode.Name))
 	os.MkdirAll(episodeFolder, os.ModePerm)
-	ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
-	ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
-	ioutil.WriteFile(filepath.Join(episodeFolder, metadataFilename), tmdbEpisodeData, os.ModePerm)
+	// TODO something here
+	// ioutil.WriteFile(filepath.Join(showFolder, metadataFilename), tmdbSeriesData, os.ModePerm)
+	// ioutil.WriteFile(filepath.Join(seasonFolder, metadataFilename), tmdbSeasonData, os.ModePerm)
+	// ioutil.WriteFile(filepath.Join(episodeFolder, metadataFilename), tmdbEpisodeData, os.ModePerm)
 
 	// Get pics if needed.
-	getImageIfNeeded(tmdbSeries.PosterPath, "w780", showFolder, imageFilename)
-	getImageIfNeeded(tmdbSeries.BackdropPath, "w1280", showFolder, imageBackdropFilename)
-	getImageIfNeeded(tmdbSeason.PosterPath, "w780", seasonFolder, imageFilename)
-	getImageIfNeeded(tmdbEpisode.StillPath, "w300", episodeFolder, imageFilename)
+	getTVImageIfNeeded(series.Poster, showFolder, imageFilename)
+	getTVImageIfNeeded(series.Art, showFolder, imageBackdropFilename)
+	getTVImageIfNeeded(season.Image, seasonFolder, imageFilename)
+	getTVImageIfNeeded(episode.Image, episodeFolder, imageFilename)
 
 	// Convert it.
 	outPath := filepath.Join(episodeFolder, hlsFilename)
