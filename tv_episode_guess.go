@@ -41,7 +41,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	// Search for the id.
 	log.Println("Fetching all episodes metadata for show", showTitleFromFile)
 	seriesId := tvdbSearchForSeries(showTitleFromFile)
-	if seriesId <= 0 {
+	if seriesId == "" {
 		log.Println("Could not find TV show for", showTitleFromFile)
 		return errors.New("Series search")
 	}

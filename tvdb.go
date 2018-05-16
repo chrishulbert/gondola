@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/xrash/smetrics"
 )
 
 const baseURL = "https://www.thetvdb.com"
@@ -47,11 +49,9 @@ func chopFirst(str string, start string) string {
 }
 
 func searchUrl(name string) string {
-	u, _ := url.Parse(baseURL) // Assume it'll work.
+	u, _ := url.Parse(baseURL + "/search") // Assume it'll work.
 	values := url.Values{}
-	values.Add("string", name)
-	values.Add("tab", "listseries")
-	values.Add("function", "Search")
+	values.Add("q", name)
 	u.RawQuery = values.Encode()
 	return u.String()
 }
@@ -71,14 +71,31 @@ func get(url string) string {
 	return string(body)
 }
 
-/// Returns <=0 if can't find.
-func tvdbSearchForSeries(name string) int {
+/// Returns the show url slug / id. "" if can't find. eg 'i-dream-of-jeannie'.
+func tvdbSearchForSeries(name string) string {
 	resp := get(searchUrl(name))
-	results := chop(resp, "<h1>TV Shows", "</table>")
-	result := chop(results, "<tr><td class=\"odd\"><a href", "</td></tr>")
-	idStr := chopLast(result, ">")
-	id, _ := strconv.Atoi(idStr)
-	return id
+	results := chop(resp, "<h2>Search Results</h2>", "</table>")
+	regex := regexp.MustCompile(`<a href="/series/(.*?)">(.*?)</a>`)
+	matches := regex.FindAllStringSubmatch(results, -1)
+	closestDistance := 99999
+	var closestSlug string
+	for _, match := range matches {
+		if len(match) >= 3 {
+			slug := match[1]
+			name := match[2]
+
+			thisDistance := smetrics.WagnerFischer(
+				strings.ToLower(name),
+				strings.ToLower(name),
+				1, 3, 2)
+
+			if thisDistance < closestDistance {
+				closestDistance = thisDistance
+				closestSlug = slug
+			}
+		}
+	}
+	return closestSlug
 }
 
 func seriesUrl(id int) string {

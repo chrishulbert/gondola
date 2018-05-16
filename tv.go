@@ -37,7 +37,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 
 	// Search for the id.
 	seriesId := tvdbSearchForSeries(showTitleFromFile)
-	if seriesId <= 0 {
+	if seriesId == "" {
 		log.Println("Could not find TV show for", showTitleFromFile)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
