@@ -14,7 +14,6 @@ import (
 )
 
 const baseURL = "https://www.thetvdb.com"
-const fanArtBaseURL = "https://www.thetvdb.com/banners/fanart/original/"
 const posterBaseURL = "https://www.thetvdb.com/banners/posters/"
 
 func chop(str string, start string, end string) string {
@@ -98,15 +97,6 @@ func tvdbSearchForSeries(name string) string {
 	return closestSlug
 }
 
-func seriesUrl(id int) string {
-	u, _ := url.Parse(baseURL) // Assume it'll work.
-	values := url.Values{}
-	values.Add("id", strconv.Itoa(id))
-	values.Add("tab", "series")
-	u.RawQuery = values.Encode()
-	return u.String()
-}
-
 func unescapeTrim(str string) string {
 	return strings.TrimSpace(html.UnescapeString(str))
 }
@@ -124,7 +114,7 @@ type TVDBSeries struct {
 }
 
 type TVDBSeason struct {
-	TVDBID int    // Eg 55271 - thetvdb id
+	TVDBID int    // Eg 1 - the season number (old tvdb used to make this different from season number)
 	Season int    `json:"season_number"` // Eg 1,2,3, or 0 for specials
 	Name   string // Eg 'Specials' or 'Season 1'
 	/// Following are only filled in when requesting season details.
@@ -134,23 +124,17 @@ type TVDBSeason struct {
 
 /// Finds all the seasons in an html for a tv series details page.
 func seasonsForResponse(resp string) []TVDBSeason {
-	section := chop(resp, "<h1>Seasons</h1>", "</div>")
-	regex := regexp.MustCompile(`seasonid=([0-9]+).*?class="seasonlink">(.+?)<`)
+	section := chop(resp, "<h2>Seasons</h2>", "</div>")
+	regex := regexp.MustCompile(`(?s)seasons/([0-9]+)">(.*?)</a>`) // s flag means . can span newlines.
 	seasons := make([]TVDBSeason, 0)
 	matches := regex.FindAllStringSubmatch(section, -1)
 	for _, match := range matches {
 		if len(match) >= 3 {
-			id, _ := strconv.Atoi(match[1])
-			number, _ := strconv.Atoi(match[2])
-			var name string
-			if number == 0 {
-				name = match[2]
-			} else {
-				name = "Season " + match[2]
-			}
+			number, _ := strconv.Atoi(match[1])
+			name := unescapeTrim(match[2])
 
 			seasons = append(seasons, TVDBSeason{
-				TVDBID: id,
+				TVDBID: number,
 				Season: number,
 				Name:   name,
 			})
@@ -159,27 +143,26 @@ func seasonsForResponse(resp string) []TVDBSeason {
 	return seasons
 }
 
-func tvdbSeriesDetails(id int) (TVDBSeries, error) {
-	resp := get(seriesUrl(id))
-	content := chop(resp, "<div id=\"content\">", "</div>")
+func tvdbSeriesDetails(id string) (TVDBSeries, error) {
+	seriesUrl := baseURL + "/series/" + id
+	resp := get(seriesUrl)
 	// Name and details.
-	nameRaw := chop(content, "<h1>", "</h1>")
+	nameRaw := chop(resp, "<title>", " @ TheTVDB</title>")
 	name := unescapeTrim(nameRaw)
-	detailsRaw := chopLast(content, "</h1>")
+	detailsArea := chop(resp, `<div class="row">`, "</div>")
+	detailsRaw := chop(detailsArea, `<p>`, `</p>`)
 	details := unescapeTrim(detailsRaw)
 	// The 16:9 background.
-	art := chop(resp, "<h1>Fan Art</h1>", "</div>")
-	artA := chop(art, "<a href=\"javascript:;\"", "</a>")
-	artFile := chop(artA, "original/", "\"")
-	artURL := fanArtBaseURL + artFile
+	artArea := chop(resp, "<h2>Backgrounds (Fan Art)</h2>", "</div>")
+	artURL := chop(artArea, `src="`, `"`)
 	// The portrait dvd cover.
-	posters := chop(resp, "<h1>Posters</h1>", "</div>")
-	posterFile := chop(posters, "<a href=\"banners/posters/", "\" target=\"_blank\">View Full Size")
-	posterURL := posterBaseURL + posterFile
-	firstAirDate := chop(resp, `<input type="text" name="FirstAired" value="`, `"`)
+	postersArea := chop(resp, "<h2>Posters</h2>", "</div>")
+	posterURL := chop(postersArea, `src="`, `"`)
+	firstAiredArea := chop(resp, `First Aired`, `</li>`)
+	firstAirDate := chop(firstAiredArea, `<span>`, `</span>`)
 	// The seasons.
 	seasons := seasonsForResponse(resp)
-	if name == "" || details == "" || len(seasons) == 0 {
+	if name == "" || len(seasons) == 0 {
 		return TVDBSeries{}, errors.New("Could not find series")
 	}
 	series := TVDBSeries{
