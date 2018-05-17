@@ -104,7 +104,7 @@ func unescapeTrim(str string) string {
 // Some of these fields below have json names for compatability with old TMDB metadata.
 
 type TVDBSeries struct {
-	TVDBID       int // Eg 55271 - thetvdb id
+	TVDBID       string // Eg 'i-dream-of-jeannie' - thetvdb url slug / id
 	Name         string
 	Overview     string
 	Art          string // The 16:9 background full url.
@@ -183,34 +183,27 @@ type TVDBEpisode struct {
 	Episode      int `json:"episode_number"`
 	Name         string
 	AirDate      string `json:"air_date"`
+	Image        string // full url.
 	// Following are empty until you ask for episode details.
 	Overview string
-	Image    string // full url.
-}
-
-func seasonUrl(seriesid int, seasonid int) string {
-	u, _ := url.Parse(baseURL) // Assume it'll work.
-	values := url.Values{}
-	values.Add("seriesid", strconv.Itoa(seriesid))
-	values.Add("seasonid", strconv.Itoa(seasonid))
-	values.Add("tab", "season")
-	u.RawQuery = values.Encode()
-	return u.String()
 }
 
 /// Extracts the episodes from the season screen.
 func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
-	section := chop(resp, `<td class="head">Episode Number</td>`, `</table>`)
-	regex := regexp.MustCompile(`&id=([0-9]+).+?>([0-9]+)<.+?;lid=7">(.*)</a></td><td class=".+?">(.*?)</td>`)
-	// regex := regexp.MustCompile(`&id=([0-9]+).+?>([0-9]+)<.+?;lid=7">(.+)</a></td><td class=".+?">(.+?)</td>`)
+	section := chop(resp, `<div class="col-xs-12 col-sm-8 episodes">`, `</table>`)
+	regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>.*?data-featherlight="(.*?)".*?</td>.*?</tr>`)
 	episodes := make([]TVDBEpisode, 0)
 	matches := regex.FindAllStringSubmatch(section, -1)
 	for _, match := range matches {
-		if len(match) >= 5 {
+		if len(match) >= 8 {
 			id, _ := strconv.Atoi(match[1])
 			number, _ := strconv.Atoi(match[2])
 			name := unescapeTrim(match[3])
-			date := unescapeTrim(match[4])
+			mm := match[4]   // mm
+			dd := match[5]   // dd
+			yyyy := match[6] // yyyy
+			date := yyyy + "-" + mm + "-" + dd
+			image := match[7]
 
 			if name != "" && number > 0 && id > 0 {
 				episodes = append(episodes, TVDBEpisode{
@@ -219,6 +212,7 @@ func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
 					Episode:      number,
 					Name:         name,
 					AirDate:      date,
+					Image:        image,
 				})
 			}
 		}
@@ -227,22 +221,28 @@ func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
 }
 
 /// Get the episodes in a season.
-func tvdbSeasonDetails(seriesid int, seasonId int, seasonNumber int) (TVDBSeason, error) {
-	resp := get(seasonUrl(seriesid, seasonId))
-	titleSection := chop(resp, `<div class="titlesection">`, `</table>`)
-	titleRaw := chop(titleSection, `<h2>`, `<`)
+func tvdbSeasonDetails(seriesid string, seasonId int, seasonNumber int) (TVDBSeason, error) {
+	seasonUrl := baseURL + "/series/" + seriesid + "/seasons/" + strconv.Itoa(seasonId)
+	resp := get(seasonUrl)
+
+	titleSection := chop(resp, `<title>`, `</title>`)
+	titleRaw := chop(titleSection, ` - `, ` @ TheTVDB`)
 	title := unescapeTrim(titleRaw) // Eg 'Season 2'
-	bannersSection := chop(resp, `<h1>Season Banners</h1>`, `</div>`)
-	banner := chop(bannersSection, `<td align=right><a href="`, `"`) // eg banners/seasons/90601-2-2.jpg
+
+	postersSection := chop(resp, `<h2>Posters</h2>`, `</div>`)
+	posterURL := chop(postersSection, `src="`, `"`)
+
 	episodes := episodesForSeasonDetails(resp, seasonNumber)
+
 	if title == "" || len(episodes) == 0 {
 		return TVDBSeason{}, errors.New("Could not find season")
 	}
+
 	season := TVDBSeason{
 		TVDBID:   seasonId,
 		Season:   seasonNumber,
 		Name:     title,
-		Image:    baseURL + `/` + banner,
+		Image:    posterURL,
 		Episodes: episodes,
 	}
 	return season, nil
