@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -78,15 +79,18 @@ func tvdbSearchForSeries(name string) string {
 	matches := regex.FindAllStringSubmatch(results, -1)
 	closestDistance := 99999
 	var closestSlug string
+	log.Println("tvdbSearchForSeries got # results:", len(matches))
 	for _, match := range matches {
 		if len(match) >= 3 {
 			slug := match[1]
-			name := match[2]
+			thisName := match[2]
 
 			thisDistance := smetrics.WagnerFischer(
-				strings.ToLower(name),
+				strings.ToLower(thisName),
 				strings.ToLower(name),
 				1, 3, 2)
+
+			log.Println("Possibility, id:", slug, ", name:", thisName, "; score:", thisDistance)
 
 			if thisDistance < closestDistance {
 				closestDistance = thisDistance
@@ -94,6 +98,7 @@ func tvdbSearchForSeries(name string) string {
 			}
 		}
 	}
+	log.Println("Best match", closestSlug)
 	return closestSlug
 }
 
@@ -249,7 +254,7 @@ func tvdbSeasonDetails(seriesid string, seasonId int, seasonNumber int) (TVDBSea
 }
 
 func tvdbEpisodeDetails(seriesId string, seasonId int, seasonNumber int, episodeid int) (TVDBEpisode, error) {
-	episodeUrl := baseURL + "/series/" + seriesid + "/episodes/" + strconv.Itoa(episodeid)
+	episodeUrl := baseURL + "/series/" + seriesId + "/episodes/" + strconv.Itoa(episodeid)
 	resp := get(episodeUrl)
 
 	episodeNumberArea := chop(resp, `<strong>Episode Number</strong>`, `</li>`)

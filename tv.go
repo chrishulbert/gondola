@@ -70,7 +70,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	// Get season details.
 	season, seasonErr := tvdbSeasonDetails(seriesId, seasonId, seasonNumber)
 	if seasonErr != nil {
-		log.Println("Could not get season metadata for", showTitleFromFile)
+		log.Println("Could not get season metadata for", showTitleFromFile, "; seriesId", seriesId, "seasonId", seasonId, "seasonNumber", seasonNumber)
 		failedPath := filepath.Join(paths.Failed, file) // Move it to 'failed'.
 		os.Rename(inPath, failedPath)
 		return seasonErr

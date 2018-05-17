@@ -31,7 +31,7 @@ type MovieMetadata struct {
 }
 
 type TVShowMetadata struct {
-	TVDBId       int
+	TVDBId       string
 	Name         string
 	Overview     string
 	Image        string
