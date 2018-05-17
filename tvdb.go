@@ -248,28 +248,26 @@ func tvdbSeasonDetails(seriesid string, seasonId int, seasonNumber int) (TVDBSea
 	return season, nil
 }
 
-func episodeUrl(seriesid int, seasonid int, episodeid int) string {
-	u, _ := url.Parse(baseURL) // Assume it'll work.
-	values := url.Values{}
-	values.Add("seriesid", strconv.Itoa(seriesid))
-	values.Add("seasonid", strconv.Itoa(seasonid))
-	values.Add("id", strconv.Itoa(episodeid))
-	values.Add("tab", "episode")
-	u.RawQuery = values.Encode()
-	return u.String()
-}
+func tvdbEpisodeDetails(seriesId string, seasonId int, seasonNumber int, episodeid int) (TVDBEpisode, error) {
+	episodeUrl := baseURL + "/series/" + seriesid + "/episodes/" + strconv.Itoa(episodeid)
+	resp := get(episodeUrl)
 
-func tvdbEpisodeDetails(seriesid int, seasonId int, seasonNumber int, episodeid int) (TVDBEpisode, error) {
-	resp := get(episodeUrl(seriesid, seasonId, episodeid))
-	episodeNumberRaw := chop(resp, `<input type="text" name="EpisodeNumber" value="`, `"`)
+	episodeNumberArea := chop(resp, `<strong>Episode Number</strong>`, `</li>`)
+	episodeNumberRaw := chop(episodeNumberArea, `<span>`, `</span>`)
 	episodeNumber, _ := strconv.Atoi(episodeNumberRaw)
-	titleSection := chop(resp, `<div class="titlesection">`, `</div>`)
-	titleH3 := chop(titleSection, `<h3>`, `</h3>`)
-	title := unescapeTrim(chopFirst(titleH3, `: `))
-	airDate := chop(resp, `<input type="text" name="FirstAired" value="`, `"`)
-	overview := unescapeTrim(chop(resp, `name="Overview_7" style="display: inline">`, `</textarea>`))
-	images := chop(resp, `<h1>Episode Image</h1>`, `</div>`)
-	image := chop(images, `<a href="`, `">`) // eg 'banners/episodes/90601/3038381.jpg'
+
+	titleArea := chop(resp, `<title>`, `</title>`)
+	titleRaw := chop(titleArea, ` - `, ` @ TheTVDB`)
+	title := unescapeTrim(titleRaw)
+
+	airArea := chop(resp, `<strong>Originally Aired</strong>`, `</li>`)
+	airDate := chop(airArea, `<span>`, `</span>`) // Eg Saturday, September 18, 1965
+
+	overviewArea := chop(resp, `<div class="block" id="translations">`, `</div>`)
+	overview := unescapeTrim(chop(overviewArea, `<p>`, `</p>`))
+
+	imageArea := chop(resp, `<div class="screenshot">`, `</div>`)
+	image := chop(imageArea, `src="`, `"`)
 
 	if title == "" || episodeNumber <= 0 {
 		return TVDBEpisode{}, errors.New("Could not find episode")
@@ -281,9 +279,8 @@ func tvdbEpisodeDetails(seriesid int, seasonId int, seasonNumber int, episodeid 
 		Episode:      episodeNumber,
 		Name:         title,
 		AirDate:      airDate,
-		// Following are empty until you ask for episode details.
-		Overview: overview,
-		Image:    baseURL + `/` + image,
+		Overview:     overview,
+		Image:        image,
 	}
 	return episode, nil
 }
