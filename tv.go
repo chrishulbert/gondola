@@ -25,7 +25,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 			// Succeeded in making a guess! Now skip this file because it's been renamed and the user must confirm.
 			return nil
 		} else {
-			log.Println("Couldn't guess the episode", guessErr)
+			log.Println("Couldn't guess the episode, error:", guessErr)
 			log.Println("Failed to parse season/episode for", file)
 			failedPath := filepath.Join(paths.Failed, file) // Move to 'failed'.
 			os.Rename(inPath, failedPath)
@@ -68,6 +68,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	}
 
 	// Get season details.
+	log.Println("Getting the season details...")
 	season, seasonErr := tvdbSeasonDetails(seriesId, seasonId, seasonNumber)
 	if seasonErr != nil {
 		log.Println("Could not get season metadata for", showTitleFromFile, "; seriesId", seriesId, "seasonId", seasonId, "seasonNumber", seasonNumber)

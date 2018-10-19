@@ -196,7 +196,7 @@ type TVDBEpisode struct {
 /// Extracts the episodes from the season screen.
 func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
 	section := chop(resp, `<div class="col-xs-12 col-sm-8 episodes">`, `</table>`)
-	regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>.*?data-featherlight="(.*?)".*?</td>.*?</tr>`)
+	regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>(.*?)</td>.*?</tr>`)
 	episodes := make([]TVDBEpisode, 0)
 	matches := regex.FindAllStringSubmatch(section, -1)
 	for _, match := range matches {
@@ -208,7 +208,7 @@ func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
 			dd := match[5]   // dd
 			yyyy := match[6] // yyyy
 			date := yyyy + "-" + mm + "-" + dd
-			image := match[7]
+			image := chop(match[7], `data-featherlight="`, `"`)
 
 			if name != "" && number > 0 && id > 0 {
 				episodes = append(episodes, TVDBEpisode{
@@ -228,6 +228,7 @@ func episodesForSeasonDetails(resp string, seasonNumber int) []TVDBEpisode {
 /// Get the episodes in a season.
 func tvdbSeasonDetails(seriesid string, seasonId int, seasonNumber int) (TVDBSeason, error) {
 	seasonUrl := baseURL + "/series/" + seriesid + "/seasons/" + strconv.Itoa(seasonId)
+	log.Println("tvdbSeasonDetails: ", seasonUrl)
 	resp := get(seasonUrl)
 
 	titleSection := chop(resp, `<title>`, `</title>`)

@@ -39,7 +39,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	}
 
 	// Search for the id.
-	log.Println("Fetching all episodes metadata for show", showTitleFromFile)
+	log.Println("Searching for series for title", showTitleFromFile)
 	seriesId := tvdbSearchForSeries(showTitleFromFile)
 	if seriesId == "" {
 		log.Println("Could not find TV show for", showTitleFromFile)
@@ -47,6 +47,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	}
 
 	// Get show details.
+	log.Println("Fetching series details for series id", seriesId)
 	series, seriesErr := tvdbSeriesDetails(seriesId)
 	if seriesErr != nil {
 		log.Println("Could not get TV show metadata for", showTitleFromFile)
@@ -58,6 +59,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 	// Find all seasons.
 	for _, sparseSeason := range series.Seasons {
 
+		log.Println("Looking up details for season: ", sparseSeason.Season)
 		fatSeason, seasonErr := tvdbSeasonDetails(seriesId, sparseSeason.TVDBID, sparseSeason.Season)
 		if seasonErr != nil {
 			log.Println("Could not get season metadata for", showTitleFromFile)
@@ -88,6 +90,7 @@ func tvEpisodeGuess(folder string, file string, paths Paths, config Config) erro
 			strings.ToLower(ep.Name),
 			strings.ToLower(episodeTitleFromFile),
 			1, 3, 2)
+		log.Println("Comparing", episodeTitleFromFile, "to", ep.Name, "distance =", thisDistance)
 		if thisDistance < closestDistance {
 			closestDistance = thisDistance
 			epCopy := ep // Without this, the memory for 'ep' is overwritten next loop iteration.
