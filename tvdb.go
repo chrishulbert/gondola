@@ -239,7 +239,7 @@ func tvdbSeasonDetails(seriesid string, seasonId int, seasonNumber int) (TVDBSea
 
 	episodes := episodesForSeasonDetails(resp, seasonNumber)
 
-	if title == "" || len(episodes) == 0 {
+	if title == "" {
 		return TVDBSeason{}, errors.New("Could not find season")
 	}
 
