@@ -4,4 +4,7 @@ run:
 build:
 	go build
 
+serve:
+	python -m SimpleHTTPServer
+
 try: build

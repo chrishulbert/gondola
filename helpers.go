@@ -24,6 +24,9 @@ func sanitiseForFilesystem(s string) string {
 }
 
 func getMovieImageIfNeeded(image string, size string, folder string, filename string) {
+	if image == "" {
+		return
+	}
 	path := filepath.Join(folder, filename)
 	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
 		image, imageErr := tmdbDownloadImage(image, size)
@@ -36,6 +39,9 @@ func getMovieImageIfNeeded(image string, size string, folder string, filename st
 }
 
 func getTVImageIfNeeded(image string, folder string, filename string) {
+	if image == "" {
+		return
+	}
 	path := filepath.Join(folder, filename)
 	if _, statErr := os.Stat(path); os.IsNotExist(statErr) {
 		image, imageErr := vanillaDownload(image)

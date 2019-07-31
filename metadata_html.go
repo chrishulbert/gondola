@@ -33,7 +33,8 @@ const (
 		width: 100%;
 	}
 	img {
-		width: 100%;
+		width: 9em;
+		height: 16em;
 	}
 	a {
 		text-decoration: none;
