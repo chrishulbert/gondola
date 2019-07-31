@@ -8,55 +8,58 @@ import "strconv"
 import "strings"
 
 func main() {
-	section := `<tr>
-                            <td>
-                                <a href="/series/shimmer-and-shine/episodes/5989017">
-                                    32                                </a>
-                            </td>
-                            <td>
-                                <a href="/series/shimmer-and-shine/episodes/5989017">
-                                                                            <span class="change_translation_text" data-language="en" style="">
-                                    Potion Control                                </span>
-                                                                            <span class="change_translation_text" data-language="nl" style="display:none">
-                                    Opgeblazen                                </span>
-                                                                            <span class="change_translation_text" data-language="es" style="display:none">
-                                    Control de pociones                                </span>
-                                                                            <span class="change_translation_text" data-language="hu" style="display:none">
-                                    Varázsital                                </span>
-                                                                    </a>
-                            </td>
-                            <td>
-                                02/17/2017                            </td>
-                            <td>
-                                                                    <i class="fas fa-image text-danger"></i>
-                                                            </td>
-                                                    </tr>`
-	// 	section := `
-	// <tr>
-	//                             <td>
-	//                                 <a href="/series/shimmer-and-shine/episodes/5962280">
-	//                                     30                                </a>
-	//                             </td>
-	//                             <td>
-	//                                 <a href="/series/shimmer-and-shine/episodes/5962280">
-	//                                                                             <span class="change_translation_text" data-language="en" style="">
-	//                                     Masquerade Charade                                </span>
-	//                                                                             <span class="change_translation_text" data-language="nl" style="display:none">
-	//                                     Gemaskerde Streek                                </span>
-	//                                                                             <span class="change_translation_text" data-language="hu" style="display:none">
-	//                                     Maszkabál                                </span>
-	//                                                                     </a>
-	//                             </td>
-	//                             <td>
-	//                                 01/27/2017                            </td>
-	//                             <td>
-	//                                                                     <a href="https://www.thetvdb.com/banners/episodes/296970/5962280.jpg" data-featherlight="https://www.thetvdb.com/banners/episodes/296970/5962280.jpg">
-	//                                         <i class="fas fa-image text-success"></i>
-	//                                     </a>
-	//                                                             </td>
-	//                                                     </tr>`
+	// section := `<tr>
+    //                         <td>
+    //                             <a href="/series/shimmer-and-shine/episodes/5989017">
+    //                                 32                                </a>
+    //                         </td>
+    //                         <td>
+    //                             <a href="/series/shimmer-and-shine/episodes/5989017">
+    //                                                                         <span class="change_translation_text" data-language="en" style="">
+    //                                 Potion Control                                </span>
+    //                                                                         <span class="change_translation_text" data-language="nl" style="display:none">
+    //                                 Opgeblazen                                </span>
+    //                                                                         <span class="change_translation_text" data-language="es" style="display:none">
+    //                                 Control de pociones                                </span>
+    //                                                                         <span class="change_translation_text" data-language="hu" style="display:none">
+    //                                 Varázsital                                </span>
+    //                                                                 </a>
+    //                         </td>
+    //                         <td>
+    //                             02/17/2017                            </td>
+    //                         <td>
+    //                                                                 <i class="fas fa-image text-danger"></i>
+    //                                                         </td>
+    //                                                 </tr>`
+		section := `<tr>
+	                            <td>
+	                                <a href="/series/shimmer-and-shine/episodes/5962280">
+	                                    30                                </a>
+	                            </td>
+	                            <td>
+	                                <a href="/series/shimmer-and-shine/episodes/5962280">
+	                                                                            <span class="change_translation_text" data-language="en" style="">
+	                                    Masquerade Charade                                </span>
+	                                                                            <span class="change_translation_text" data-language="nl" style="display:none">
+	                                    Gemaskerde Streek                                </span>
+	                                                                            <span class="change_translation_text" data-language="hu" style="display:none">
+	                                    Maszkabál                                </span>
+	                                                                    </a>
+	                            </td>
+	                            <td>
+	                                01/27/2017                            </td>
+	                            <td>
+	                                                                    <a href="https://www.thetvdb.com/banners/episodes/296970/5962280.jpg" data-featherlight="https://www.thetvdb.com/banners/episodes/296970/5962280.jpg">
+	                                        <i class="fas fa-image text-success"></i>
+	                                    </a>
+	                                                            </td>
+	                                                    </tr>`
 
-	regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>.*?data-featherlight="(.*?)".*?</td>.*?</tr>`)
+    // regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>.*?data-featherlight="(.*?)".*?</td>.*?</tr>`)
+    regex := regexp.MustCompile(`(?s)<tr>.*?/episodes/([0-9]+)">.*?([0-9]+).*?<span.*?>(.*?)</span>.*?<td>.*?([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*?</td>.*?<td>(.*?)</td>.*?</tr>`)
+    
+    // 
+    // (.*?)
 	matches := regex.FindAllStringSubmatch(section, -1)
 	for _, match := range matches {
 		if len(match) >= 8 {
@@ -66,8 +69,8 @@ func main() {
 			mm := match[4]   // mm
 			dd := match[5]   // dd
 			yyyy := match[6] // yyyy
-			date := yyyy + "-" + mm + "-" + dd
-			image := match[7]
+            date := yyyy + "-" + mm + "-" + dd
+            image := chop(match[7], `data-featherlight="`, `"`)
 
 			if name != "" && number > 0 && id > 0 {
 				fmt.Println(name)
@@ -77,4 +80,17 @@ func main() {
 		}
 	}
 
+}
+
+func chop(str string, start string, end string) string {
+	indexA := strings.Index(str, start)
+	if indexA < 0 {
+		return ""
+	}
+	remainder := str[indexA+len(start):]
+	indexB := strings.Index(remainder, end)
+	if indexB < 0 {
+		return ""
+	}
+	return remainder[:indexB]
 }
