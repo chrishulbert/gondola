@@ -109,25 +109,37 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 	// Figure out what to do with the video.
 	videoStream := videoStreams[0]
 	deinterlace := needsDeinterlacingFromFile(inPath)
+	scaleAndCrop := needsScaleCrop1080FromFile(inPath)
+	isIncompatible := isIncompatiblePixelFormat(videoStream.Pix_fmt)
 	var videoArgs []string
-	if deinterlace {
-		log.Println("Video is to be deinterlaced")
-		videoArgs = []string{"-vf", "yadif"}
-	} else if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" {
+	if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" && !isIncompatible && !deinterlace && !scaleAndCrop {
 		// Can only direct copy if not avc1, or it won't be a seekable video.
 		log.Println("Eligible for video not being transcoded, so no quality loss :)")
 		videoArgs = []string{"-vcodec", "copy"}
-	} else if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string == "avc1" {
-		// Have to transcode avc1 or they can't seek when watching.
-		log.Println("Video needs transcoding to be seekable HLS, because it's AVC1")
-		videoArgs = nil
 	} else {
-		// Any other codec needs transcoding.
-		log.Println("Video needs transcoding, original codec doesn't suit")
-		videoArgs = nil
+		log.Println("Video not eligible for muxing without transcoding.")
+		if isIncompatible {
+			log.Println("Video needs pixel format conversion")
+			videoArgs = append(videoArgs, "-pix_fmt", "yuv420p")
+		}
+		if deinterlace {
+			log.Println("Video is to be deinterlaced")
+			videoArgs = append(videoArgs, "-vf", "yadif")
+		}
+		if scaleAndCrop {
+			log.Println("Scale+crop to 1080p")
+			videoArgs = append(videoArgs, "-vf", "scale=-1:1080,crop=1920:1080")
+		}
 	}
 
 	return runConvertToHLS(inPath, outPath, audioStream.Index, videoStream.Index, audioCommand, videoArgs)
+}
+
+func isIncompatiblePixelFormat(pf string) bool {
+	return strings.HasSuffix(pf, "9le") || strings.HasSuffix(pf, "9be") ||
+		strings.HasSuffix(pf, "10le") || strings.HasSuffix(pf, "10be") ||
+		strings.HasSuffix(pf, "12le") || strings.HasSuffix(pf, "12be") ||
+		strings.HasSuffix(pf, "14le") || strings.HasSuffix(pf, "14be")
 }
 
 /// Converts to HLS. If it gets back an error about h264_mp4toannexb, it retries with the appropriate command.

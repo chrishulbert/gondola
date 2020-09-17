@@ -61,3 +61,7 @@ func audioStreamFromFile(file string) *int {
 func needsDeinterlacingFromFile(file string) bool {
 	return strings.Contains(file, "deinterlace")
 }
+
+func needsScaleCrop1080FromFile(file string) bool {
+	return strings.Contains(file, "scalecrop1080")
+}
