@@ -1,3 +1,6 @@
+help:
+	cat Makefile
+	
 run:
 	go run *.go
 

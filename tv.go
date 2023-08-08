@@ -36,7 +36,8 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 			seasonNumber, _ = strconv.Atoi(matches[2])
 			seasonName := strings.TrimSpace(matches[3])
 			episodeNumber, _ = strconv.Atoi(matches[4])
-			episodeName := strings.TrimSpace(matches[5])
+			episodeNameA := strings.TrimSpace(matches[5])
+			episodeName := strings.Split(episodeNameA, ".")[0] // Eg if it is 'Foo.deinterlace.audiostream2' this only returns the 'Foo'.
 			series = TVDBSeries{
 				Name: seriesName,
 			}

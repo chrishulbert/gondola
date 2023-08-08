@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type TmdbMovieSearchResults struct {
@@ -23,7 +24,21 @@ type TmdbMovieSearchResult struct {
 
 // Finds the movie id.
 // If year is given, it includes that in the criteria.
-func requestTmdbMovieSearch(title string, year *int) (TmdbMovieSearchResult, error) {
+func requestTmdbMovieSearch(title string, year *int) (TmdbMovieSearchResult, error) {	
+	if strings.HasPrefix(title, "!") { // Don't use TMDB.
+		newTitleA := strings.TrimSpace(title[1:])
+		newTitle := strings.Split(newTitleA, ".")[0] // Eg if it is '!Foo.deinterlace.audiostream2' this only returns the 'Foo'.
+		actualYear := 2000
+		if year != nil {
+			actualYear = *year
+		}
+		yearStr := strconv.Itoa(actualYear)
+		return TmdbMovieSearchResult{
+			Title: newTitle,
+			ReleaseDate: yearStr + "-01-01",
+		}, nil
+	}
+
 	url := tmdbApiRoot + "search/movie?api_key=" + tmdbApiKey + "&query=" + url.QueryEscape(title)
 	if year != nil {
 		url += "&year=" + strconv.Itoa(*year)

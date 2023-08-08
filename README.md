@@ -49,12 +49,19 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big Buck Bunny 2008 1080p blah.vob
 	* Big.Buck.Bunny.vob
 	* Big.Buck.Bunny.2008.deinterlace.vob
+	* Big.Buck.Bunny.2008.scalecrop1080.vob
+	* Big.Buck.Bunny.2008.scalecrop239letterbox1080.vob
+	* !Big Buck Bunny.2008.vob (this is for movies that cannot be found on TMDB; you will need to supply images yourself)
 
 If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search TMDB for the movie metadata.
 
 If it cannot find a year, it still searches TMDB to find the movie, but it stands less of a chance finding the correct movie if there's no year.
 
 If it finds 'deinterlace' then it uses FFMPEG to deinterlace the video. This is useful for old DVDs.
+
+If 'scalecrop1080' is found, it scales to 1080p high, then takes only the center 1920 columns, discarding some content to the left and right outside of the 1920. This is handy when you have eg very-widescreen 4k input, and you want it to completely fill your TV, and prefer cropping off the right and left sides a little. Use this if there are no letterbox black bars baked into the input.
+
+Use 'scalecrop239letterbox1080' for the same purpose as scalecrop1080, however this is for when letterbox black bars are baked into the input. This assumes the part we want to keep after cropping the black bars is 1:2.39 ratio.
 
 For TV shows placed in `New/TV` folder, use the following:
 
@@ -67,6 +74,14 @@ So long as it can find 'SxxEyy' (for season x episode y), it assumes the show's 
 If you use the last format (eg there's no SxEy, and there is a `-`), it takes a 'best guess' at which season and episode it is. This is useful for shows where the DVD order is different to the TV order. I actually recommend using this when you make backups of your DVDs. The episode name doesn't need to be an exact match, because it does a 'Levenshtein distance' calculation to make a best guess at which episode it is.
 
 But it forces you to confirm it guessed correctly: the file is renamed to the best guess, with a `.remove if correct` extension attached. If you're happy with the guess, rename the file to remove the extension, and it'll process as usual. Eg if you upload `Seinfeld - Serenity.vob`, it'll rename it to `Seinfeld S09E03 The Serenity Now.Seinfeld - Serenity.vob.remove if correct`. The first half of that is the guessed episode's number and it's name according to TMDB, then the original name you gave the file, then the remove_if_correct extension for you to remove as a confirmation that you're happy.
+
+### TV shows without TMDB lookup
+
+Since the TMDB lookup tends to fail now, you can use the following naming convention:
+
+	* !Show name - S1 Season 1 - E2 Episode title.deinterlace.vob
+
+Obviously this will not be able to look up metadata, so it is up to you to provide images in this case.
 
 ## Name
 

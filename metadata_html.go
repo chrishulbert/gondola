@@ -13,7 +13,7 @@ const (
 		padding:0;
 		border:0;
 		outline:0;
-		font-family: "Helvetica Neue";
+		font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
 		border-collapse: collapse;
 	}
 	h1, h3 {
@@ -34,7 +34,11 @@ const (
 	}
 	img {
 		width: 9em;
-		height: 16em;
+		height: 9em;
+		object-fit: contain;
+		background-color: gray;
+		background-size: 1000%;
+		background-position: center;
 	}
 	a {
 		text-decoration: none;
@@ -49,7 +53,7 @@ const (
 	<table>`
 	htmlTd = `<td>
 				<a href="LINK">
-					<p><img src="IMAGE" /></p>
+					<p><img src="IMAGE" style='background-image: url("IMAGE")' /></p>
 					<p>NAME</p>
 				</a>
 			</td>`
