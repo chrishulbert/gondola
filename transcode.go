@@ -110,6 +110,7 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 	videoStream := videoStreams[0]
 	deinterlace := strings.Contains(inPath, "deinterlace")
 	scaleAndCrop := strings.Contains(inPath, "scalecrop1080")
+	scaleCrop1920_940 := strings.Contains(inPath, "scalecrop1920_940")
 	scaleCrop239Letterbox := strings.Contains(inPath, "scalecrop239letterbox1080") 
 	isIncompatible := isIncompatiblePixelFormat(videoStream.Pix_fmt)
 	var videoArgs []string
@@ -130,6 +131,10 @@ func convertToHLSAppropriately(inPath string, outPath string, config Config) err
 		if scaleAndCrop {
 			log.Println("Scale+crop to 1080p")
 			videoArgs = append(videoArgs, "-vf", "scale=-1:1080,crop=1920:1080")
+		}
+		if scaleCrop1920_940 {
+			log.Println("Scale+crop to 1920x940")
+			videoArgs = append(videoArgs, "-vf", "scale=-1:940,crop=1920:940")
 		}
 		if scaleCrop239Letterbox {
 			log.Println("Scale+crop+remove 1:2.39 letterbox bars to 1080p")

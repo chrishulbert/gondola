@@ -50,6 +50,7 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big.Buck.Bunny.vob
 	* Big.Buck.Bunny.2008.deinterlace.vob
 	* Big.Buck.Bunny.2008.scalecrop1080.vob
+	* Big.Buck.Bunny.2008.scalecrop1920_940.vob
 	* Big.Buck.Bunny.2008.scalecrop239letterbox1080.vob
 	* !Big Buck Bunny.2008.vob (this is for movies that cannot be found on TMDB; you will need to supply images yourself)
 
@@ -60,6 +61,8 @@ If it cannot find a year, it still searches TMDB to find the movie, but it stand
 If it finds 'deinterlace' then it uses FFMPEG to deinterlace the video. This is useful for old DVDs.
 
 If 'scalecrop1080' is found, it scales to 1080p high, then takes only the center 1920 columns, discarding some content to the left and right outside of the 1920. This is handy when you have eg very-widescreen 4k input, and you want it to completely fill your TV, and prefer cropping off the right and left sides a little. Use this if there are no letterbox black bars baked into the input.
+
+Use 'scalecrop1920_940' in the same way you'd use 'scalecrop1080' for wide 4k inputs that you'd like to crop a little off the sides, but is a compromise: You're still letterboxed, just that the black bars are half the height. Probably a good option for epic movies.
 
 Use 'scalecrop239letterbox1080' for the same purpose as scalecrop1080, however this is for when letterbox black bars are baked into the input. This assumes the part we want to keep after cropping the black bars is 1:2.39 ratio.
 
