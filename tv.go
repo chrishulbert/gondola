@@ -159,8 +159,7 @@ func processTV(folder string, file string, paths Paths, config Config) error {
 	getTVImageIfNeeded(episode.Image, episodeFolder, imageFilename)
 
 	// Convert it.
-	outPath := filepath.Join(episodeFolder, hlsFilename)
-	convertErr := convertToHLSAppropriately(inPath, outPath, config)
+	convertErr := convertToHLSAppropriately(inPath, episodeFolder, config)
 
 	// Fail! Move it to the failed folder.
 	if convertErr != nil {

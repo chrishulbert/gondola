@@ -41,8 +41,7 @@ func processMovie(folder string, file string, paths Paths, config Config) error 
 	getMovieImageIfNeeded(tmdbMovie.BackdropPath, "w1280", stagingOutputFolder, imageBackdropFilename)
 
 	// Convert it.
-	outPath := filepath.Join(stagingOutputFolder, hlsFilename)
-	convertErr := convertToHLSAppropriately(inPath, outPath, config)
+	convertErr := convertToHLSAppropriately(inPath, stagingOutputFolder, config)
 
 	// Fail! Move it to the failed folder.
 	if convertErr != nil {
