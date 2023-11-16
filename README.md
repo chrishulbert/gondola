@@ -50,6 +50,7 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big.Buck.Bunny.vob
 	* Big.Buck.Bunny.2008.deinterlace.vob
 	* Big.Buck.Bunny.2008.scalecrop1080.vob
+	* Big.Buck.Bunny.2008.crop1920_940Ratio.vob
 	* Big.Buck.Bunny.2008.scalecrop1920_940.vob
 	* Big.Buck.Bunny.2008.scalecrop239letterbox1080.vob
 	* Big.Buck.Bunny.2008.scalecrop239letterbox1920_940.vob
@@ -65,9 +66,17 @@ If 'scalecrop1080' is found, it scales to 1080p high, then takes only the center
 
 Use 'scalecrop1920_940' in the same way you'd use 'scalecrop1080' for wide 4k inputs that you'd like to crop a little off the sides, but is a compromise: You're still letterboxed, just that the black bars are half the height. Probably a good option for epic movies.
 
+Use 'crop1920_940Ratio' similarly to scalecrop1920_940 for inputs that are 1920 wide so you don't want to scale them down, and of eg 1:2.39 ratio, so it crops a bit off the left and right so that it fills the screen a bit more (but not entirely, so you still have the movie effect).
+
 Use 'scalecrop239letterbox1080' for the same purpose as scalecrop1080, however this is for when letterbox black bars are baked into the input. This assumes the part we want to keep after cropping the black bars is 1:2.39 ratio.
 
 Use 'scalecrop239letterbox1920_940' to get the same output as scalecrop1920_940, but if the input has the letterbox bars baked in.
+
+Use 'crop240LetterboxThenUnivisium' to crop out baked-in 1:2.4 letterbox bars, then crop again to univisium 2:1. Useful for DVDs.
+
+Use 'crop240LetterboxThen169' to crop out baked-in 1:2.40 letterbox bars, then crop again to 16:9.
+
+Use 'crop235LetterboxThen169' to crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9.
 
 For TV shows placed in `New/TV` folder, use the following:
 

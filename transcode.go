@@ -111,9 +111,14 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 	videoStream := videoStreams[0]
 	deinterlace := strings.Contains(inPath, "deinterlace")
 	scaleAndCrop := strings.Contains(inPath, "scalecrop1080")
-	scaleCrop1920_940 := strings.Contains(inPath, "scalecrop1920_940")
+	crop1920_940Ratio := strings.Contains(inPath, "crop1920_940Ratio") // For 1920xshort (eg 800) inputs.
+	scaleCrop1920_940 := strings.Contains(inPath, "scalecrop1920_940") // For eg 4k inputs.
 	scaleCrop239Letterbox := strings.Contains(inPath, "scalecrop239letterbox1080") 
 	scaleCrop239Letterbox1920_940 := strings.Contains(inPath, "scalecrop239letterbox1920_940") 	
+	crop240LetterboxThenUnivisium := strings.Contains(inPath, "crop240LetterboxThenUnivisium") 	
+	crop235LetterboxThenUnivisium := strings.Contains(inPath, "crop235LetterboxThenUnivisium") 	
+	crop240LetterboxThen169 := strings.Contains(inPath, "crop240LetterboxThen169") 	
+	crop235LetterboxThen169 := strings.Contains(inPath, "crop235LetterboxThen169") 	
 	isIncompatible := isIncompatiblePixelFormat(videoStream.Pix_fmt)
 	var videoArgs []string
 	if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" && !isIncompatible && !deinterlace && !scaleAndCrop {
@@ -134,6 +139,10 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 			log.Println("Scale+crop to 1080p")
 			videoArgs = append(videoArgs, "-vf", "scale=-1:1080,crop=1920:1080")
 		}
+		if crop1920_940Ratio {
+			log.Println("Crop to 1920x940 ratio.")
+			videoArgs = append(videoArgs, "-vf", "crop=ih/940*1920:ih")
+		}
 		if scaleCrop1920_940 {
 			log.Println("Scale+crop to 1920x940")
 			videoArgs = append(videoArgs, "-vf", "scale=-1:940,crop=1920:940")
@@ -144,8 +153,24 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 		}
 		if scaleCrop239Letterbox1920_940 {
 			log.Println("Scale+crop+remove 1:2.39 letterbox bars to 1920x940")
-			videoArgs = append(videoArgs, "-vf", "crop=in_w:in_w/2.39,scale=-1:940,crop=1920:940")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.39,scale=-1:940,crop=1920:940")
 		}
+		if crop240LetterboxThenUnivisium {
+			log.Println("Crop out baked-in 1:2.40 letterbox bars, then crop again to univisium 1:2")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.4,crop=ih*2:ih")
+		}
+		if crop235LetterboxThenUnivisium {
+			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to univisium 1:2")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*2:ih")
+		}		
+		if crop240LetterboxThen169 {
+			log.Println("Crop out baked-in 1:2.40 letterbox bars, then crop again to 16:9")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.4,crop=ih*16/9:ih")
+		}
+		if crop235LetterboxThen169 {
+			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*16/9:ih")
+		}		
 	}
 
 	return runConvertToHLS(inPath, outFolder, audioStream.Index, videoStream.Index, audioCommand, videoArgs, videoStream.Avg_frame_rate)
