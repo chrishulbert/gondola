@@ -74,6 +74,8 @@ Use 'scalecrop239letterbox1920_940' to get the same output as scalecrop1920_940,
 
 Use 'crop240LetterboxThenUnivisium' to crop out baked-in 1:2.4 letterbox bars, then crop again to univisium 2:1. Useful for DVDs.
 
+Use 'crop235LetterboxThenUnivisiumThen1920' for 4k inputs, to crop out baked-in 1:2.35 letterbox bars, then crop again to univisium 2:1, then scale to 1920x960.
+
 Use 'crop240LetterboxThen169' to crop out baked-in 1:2.40 letterbox bars, then crop again to 16:9.
 
 Use 'crop235LetterboxThen169' to crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9.

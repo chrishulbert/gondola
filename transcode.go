@@ -163,6 +163,10 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to univisium 1:2")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*2:ih")
 		}		
+		if strings.Contains(inPath, "crop235LetterboxThenUnivisiumThen1920") { // 1920/816 = 2.35
+			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop that to univisium 1:2, then scale to 1920 (for 4k inputs)")
+			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*2:ih,scale=1920:-1")
+		}
 		if crop240LetterboxThen169 {
 			log.Println("Crop out baked-in 1:2.40 letterbox bars, then crop again to 16:9")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.4,crop=ih*16/9:ih")
@@ -170,7 +174,7 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 		if crop235LetterboxThen169 {
 			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*16/9:ih")
-		}		
+		}
 	}
 
 	return runConvertToHLS(inPath, outFolder, audioStream.Index, videoStream.Index, audioCommand, videoArgs, videoStream.Avg_frame_rate)
