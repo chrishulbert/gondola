@@ -175,6 +175,15 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*16/9:ih")
 		}
+		if strings.Contains(inPath, "crop240LetterboxDVDThenUnivisium") {
+			log.Println("Cropping out baked-in 2:40 letterbox bars from a dvd with non-square pixels, then to univisium.")
+			// For 2.4:1 DVDs with a non-square SAR eg 720x576 stretched to 16:9 [SAR 64:45 DAR 16:9], with letterbox bars baked in.
+			// 720 is visually 1024 (720*64/45), so it's visually 1024x576 inclusive of black bars.
+			// We want 1024/2.4 = 426 vertical pixels of that.
+			// Then double the 426 to get the univisium displayed width of 852.
+			// Then divide that by the SAR (852/64*45) to get 600.
+			videoArgs = append(videoArgs, "-vf", "crop=600:426")
+		}
 	}
 
 	return runConvertToHLS(inPath, outFolder, audioStream.Index, videoStream.Index, audioCommand, videoArgs, videoStream.Avg_frame_rate)
