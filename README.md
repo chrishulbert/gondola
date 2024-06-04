@@ -68,6 +68,8 @@ Use 'scalecrop1920_940' in the same way you'd use 'scalecrop1080' for wide 4k in
 
 Use 'crop1920_940Ratio' similarly to scalecrop1920_940 for inputs that are 1920 wide so you don't want to scale them down, and of eg 1:2.39 ratio, so it crops a bit off the left and right so that it fills the screen a bit more (but not entirely, so you still have the movie effect).
 
+Use 'cropScaleDown4kWideToUnivisium' For if the input ratio is >= 1:2.1, crops down to 1:2 to fill the tv nicely, then scales to 1920w.
+
 Use 'scalecrop239letterbox1080' for the same purpose as scalecrop1080, however this is for when letterbox black bars are baked into the input. This assumes the part we want to keep after cropping the black bars is 1:2.39 ratio.
 
 Use 'scalecrop239letterbox1920_940' to get the same output as scalecrop1920_940, but if the input has the letterbox bars baked in.

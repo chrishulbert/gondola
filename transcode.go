@@ -147,6 +147,10 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 			log.Println("Scale+crop to 1920x940")
 			videoArgs = append(videoArgs, "-vf", "scale=-1:940,crop=1920:940")
 		}
+		if strings.Contains(inPath, "cropScaleDown4kWideToUnivisium") {
+			// For if the input ratio is >= 1:2.1, crops down to 1:2 to fill the tv nicely, then scales to 1920w.
+			videoArgs = append(videoArgs, "-vf", "crop=ih*2:ih,scale=1920:-1")
+		}
 		if scaleCrop239Letterbox {
 			log.Println("Scale+crop+remove 1:2.39 letterbox bars to 1080p")
 			videoArgs = append(videoArgs, "-vf", "crop=in_w:in_w/2.39,scale=-1:1080,crop=1920:1080")
