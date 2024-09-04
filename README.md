@@ -54,6 +54,7 @@ When you dump a movie into the 'New/Movies' folder, the following will work:
 	* Big.Buck.Bunny.2008.scalecrop1920_940.vob
 	* Big.Buck.Bunny.2008.scalecrop239letterbox1080.vob
 	* Big.Buck.Bunny.2008.scalecrop239letterbox1920_940.vob
+	* Big.Buck.Bunny.2008.scaleInside1920_1080MaintainingRatio.vob
 	* !Big Buck Bunny.2008.vob (this is for movies that cannot be found on TMDB; you will need to supply images yourself)
 
 If it finds a year, it assumes the text to the left is the title. Text to the right is ignored, as it's usually resolution/codec/other stuff. Dots/periods are converted to spaces, which it then uses to search TMDB for the movie metadata.
@@ -83,6 +84,8 @@ Use 'crop4k240LetterboxThenUnivisiumThen1920' for 4k inputs, to crop out baked-i
 Use 'crop240LetterboxThen169' to crop out baked-in 1:2.40 letterbox bars, then crop again to 16:9.
 
 Use 'crop235LetterboxThen169' to crop out baked-in 1:2.35 letterbox bars, then crop again to 16:9.
+
+Use 'scaleInside1920_1080MaintainingRatio' to shrink 4k input to 1080p, maintaining aspect ratio, so the height will potentially be < 1080 if it's wider than 16:9. Nothing is cropped.
 
 For TV shows placed in `New/TV` folder, use the following:
 

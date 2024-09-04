@@ -3,12 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
-	"io/ioutil"
+	"strings"
 )
 
 // Custom error for 'couldn't transcode, but i renamed it, so don't move it to failed'.
@@ -113,12 +113,12 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 	scaleAndCrop := strings.Contains(inPath, "scalecrop1080")
 	crop1920_940Ratio := strings.Contains(inPath, "crop1920_940Ratio") // For 1920xshort (eg 800) inputs.
 	scaleCrop1920_940 := strings.Contains(inPath, "scalecrop1920_940") // For eg 4k inputs.
-	scaleCrop239Letterbox := strings.Contains(inPath, "scalecrop239letterbox1080") 
-	scaleCrop239Letterbox1920_940 := strings.Contains(inPath, "scalecrop239letterbox1920_940") 	
-	crop240LetterboxThenUnivisium := strings.Contains(inPath, "crop240LetterboxThenUnivisium") 	
-	crop235LetterboxThenUnivisium := strings.Contains(inPath, "crop235LetterboxThenUnivisium") 	
-	crop240LetterboxThen169 := strings.Contains(inPath, "crop240LetterboxThen169") 	
-	crop235LetterboxThen169 := strings.Contains(inPath, "crop235LetterboxThen169") 	
+	scaleCrop239Letterbox := strings.Contains(inPath, "scalecrop239letterbox1080")
+	scaleCrop239Letterbox1920_940 := strings.Contains(inPath, "scalecrop239letterbox1920_940")
+	crop240LetterboxThenUnivisium := strings.Contains(inPath, "crop240LetterboxThenUnivisium")
+	crop235LetterboxThenUnivisium := strings.Contains(inPath, "crop235LetterboxThenUnivisium")
+	crop240LetterboxThen169 := strings.Contains(inPath, "crop240LetterboxThen169")
+	crop235LetterboxThen169 := strings.Contains(inPath, "crop235LetterboxThen169")
 	isIncompatible := isIncompatiblePixelFormat(videoStream.Pix_fmt)
 	var videoArgs []string
 	if videoStream.Codec_name == "h264" && videoStream.Codec_tag_string != "avc1" && !isIncompatible && !deinterlace && !scaleAndCrop {
@@ -151,6 +151,10 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 			// For if the input ratio is >= 1:2.1, crops down to 1:2 to fill the tv nicely, then scales to 1920w.
 			videoArgs = append(videoArgs, "-vf", "crop=ih*2:ih,scale=1920:-1")
 		}
+		if strings.Contains(inPath, "scaleInside1920_1080MaintainingRatio") {
+			// Both dimensions will be <= 1920x1080, while maintaining the aspect ratio.
+			videoArgs = append(videoArgs, "-vf", "scale=1920:1080:force_original_aspect_ratio=decrease")
+		}
 		if scaleCrop239Letterbox {
 			log.Println("Scale+crop+remove 1:2.39 letterbox bars to 1080p")
 			videoArgs = append(videoArgs, "-vf", "crop=in_w:in_w/2.39,scale=-1:1080,crop=1920:1080")
@@ -166,7 +170,7 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 		if crop235LetterboxThenUnivisium {
 			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop again to univisium 1:2")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*2:ih")
-		}		
+		}
 		if strings.Contains(inPath, "crop235LetterboxThenUnivisiumThen1920") { // 1920/816 = 2.35
 			log.Println("Crop out baked-in 1:2.35 letterbox bars, then crop that to univisium 1:2, then scale to 1920 (for 4k inputs)")
 			videoArgs = append(videoArgs, "-vf", "crop=iw:iw/2.35,crop=ih*2:ih,scale=1920:-1")
