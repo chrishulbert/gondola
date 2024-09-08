@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -109,6 +108,7 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 
 	// Figure out what to do with the video.
 	videoStream := videoStreams[0]
+	duration, _ := strconv.ParseFloat(probeResult.Format.Duration, 64)
 	deinterlace := strings.Contains(inPath, "deinterlace")
 	scaleAndCrop := strings.Contains(inPath, "scalecrop1080")
 	crop1920_940Ratio := strings.Contains(inPath, "crop1920_940Ratio") // For 1920xshort (eg 800) inputs.
@@ -198,7 +198,16 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 		}
 	}
 
-	return runConvertToHLS(inPath, outFolder, audioStream.Index, videoStream.Index, audioCommand, videoArgs, videoStream.Avg_frame_rate)
+	return runConvertToHLS(
+		inPath,
+		outFolder,
+		audioStream.Index,
+		videoStream.Index,
+		audioCommand,
+		videoArgs,
+		videoStream.Avg_frame_rate,
+		duration,
+		probeResult.hasSubtitles())
 }
 
 func isIncompatiblePixelFormat(pf string) bool {
@@ -208,9 +217,9 @@ func isIncompatiblePixelFormat(pf string) bool {
 		strings.HasSuffix(pf, "14le") || strings.HasSuffix(pf, "14be")
 }
 
-/// Converts to HLS. If it gets back an error about h264_mp4toannexb, it retries with the appropriate command.
-/// frameRate is as per the probe eg "24000/1001"
-func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, videoStreamIndex int, audioArgs []string, videoArgs []string, frameRateString string) error {
+// Converts to HLS. If it gets back an error about h264_mp4toannexb, it retries with the appropriate command.
+// frameRate is as per the probe eg "24000/1001"
+func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, videoStreamIndex int, audioArgs []string, videoArgs []string, frameRateString string, duration float64, hasSubtitles bool) error {
 	log.Printf("Converting to HLS with ffmpeg, audio: %+v; video: %+v\n", audioArgs, videoArgs)
 	hlsHeaderPath := filepath.Join(outFolder, hlsFilename)
 	var frameRate float64 = 60
@@ -222,20 +231,44 @@ func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, vide
 	} else {
 		frameRate, _ = strconv.ParseFloat(frameRateString, 64)
 	}
-	hlsHeaderContent := fmt.Sprintf("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000000,FRAME-RATE=%f\n%s", frameRate, hlsSegmentsFilename)
-	hlsHeaderErr := ioutil.WriteFile(hlsHeaderPath, []byte(hlsHeaderContent), os.ModePerm)
+	xStreamInfSuffix := ""
+	headerSubsLine := ""
+	if hasSubtitles {
+		xStreamInfSuffix = ",SUBTITLES=\"subs\""
+		headerSubsLine = "#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",NAME=\"English\",DEFAULT=NO,AUTOSELECT=YES,FORCED=NO,LANGUAGE=\"en\",CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog\",URI=\"subtitles.m3u8\"\n"
+	}
+	hlsHeaderContent := fmt.Sprintf("#EXTM3U\n%v#EXT-X-STREAM-INF:BANDWIDTH=1000000,FRAME-RATE=%f%v\n%s", headerSubsLine, frameRate, xStreamInfSuffix, hlsSegmentsFilename)
+	hlsHeaderErr := os.WriteFile(hlsHeaderPath, []byte(hlsHeaderContent), os.ModePerm)
 	if hlsHeaderErr != nil {
 		log.Println("Error writing hls header:", hlsHeaderErr)
 		return hlsHeaderErr
+	}
+
+	// Write the subs m3u8.
+	if hasSubtitles {
+		durationInt := int(duration)
+		subsContent := fmt.Sprintf("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:%d\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:%d,\nsubtitles.vtt", durationInt, durationInt)
+		subsPath := filepath.Join(outFolder, "subtitles.m3u8")
+		os.WriteFile(subsPath, []byte(subsContent), os.ModePerm)
+
+		// Extract the VTT.
+		vttPath := filepath.Join(outFolder, "subtitles.vtt")
+		args := []string{
+			"-i", inPath, // Select the input file.
+			"-map", "0:s:0", // Select first subtitles track only.
+			vttPath,
+		}
+		result, err := ffmpeg(args)
+		if err != nil {
+			log.Println("Extracting subs failed, output was as follows, however I'll continue anyway:")
+			log.Println(string(result))
+		}
 	}
 
 	firstArgs := []string{
 		"-i", inPath, // Select the input file.
 		"-map", fmt.Sprintf("0:%d", videoStreamIndex), // Select the video stream. '0:v' would copy all video channels, but that's out of scope for this simple project.
 		"-map", fmt.Sprintf("0:%d", audioStreamIndex), // 0:a would copy all audio channels, but iOS won't let you select channels from the stock media player.
-		// Can't copy subs, as ffmpeg segfaults with an error "Exactly one WebVTT stream is needed".
-		// "-map", "0:s", // Copies all subs
-		// "-c:s", "copy", // Copy subs, no transcode option for subs. It's a bit silly this needs to be specified.
 	}
 	hlsSegmentsPath := filepath.Join(outFolder, hlsSegmentsFilename)
 	lastArgs := []string{"-hls_list_size", "0", hlsSegmentsPath}
@@ -266,7 +299,7 @@ func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, vide
 	return err
 }
 
-/// Runs FFMPEG, nicely, returning the stdout/stderr and any error.
+// Runs FFMPEG, nicely, returning the stdout/stderr and any error.
 func ffmpeg(args []string) (string, error) {
 	nice := []string{"-n", "20", "ffmpeg"}
 	allArgs := append(nice, args...)

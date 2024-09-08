@@ -130,3 +130,12 @@ func (r *ProbeResult) videoStreams() []ProbeStream {
 	}
 	return streams
 }
+
+func (r *ProbeResult) hasSubtitles() bool {
+	for _, stream := range r.Streams {
+		if stream.Codec_type == "subtitle" {
+			return true
+		}
+	}
+	return false
+}

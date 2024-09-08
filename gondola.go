@@ -15,7 +15,7 @@ const (
 	imageBackdropFilename = "backdrop.jpg"
 	metadataFilename      = "metadata.json"
 	hlsFilename           = "hls.m3u8" // This is only a few lines, so the framerate can be set.
-	hlsSegmentsFilename   = "hls_segments.m3u8" // This is the main shebang.
+	hlsSegmentsFilename   = "seg.m3u8" // This is the main shebang.
 )
 
 // Returns true if it's an extension we're interested in.
