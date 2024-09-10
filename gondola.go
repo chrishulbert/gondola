@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -91,6 +92,14 @@ type Paths struct {
 	Failed               string // Root/Failed
 }
 
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func main() {
 	config, configErr := loadConfig()
 	if configErr != nil {
@@ -98,6 +107,13 @@ func main() {
 	}
 	log.Println("Config loaded:")
 	log.Printf("%+v\n", config)
+
+	// Waiting for the folder to mount.
+	for i := 0; i < 60; i++ {
+		if exists(config.Root) { break }
+		log.Println("Waiting for folder to become available...")
+		time.Sleep(time.Second)
+    }
 
 	// Figure out all the folders.
 	var paths Paths
