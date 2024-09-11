@@ -237,7 +237,7 @@ func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, vide
 		xStreamInfSuffix = ",SUBTITLES=\"subs\""
 		headerSubsLine = "#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",NAME=\"English\",DEFAULT=NO,AUTOSELECT=YES,FORCED=NO,LANGUAGE=\"en\",CHARACTERISTICS=\"public.accessibility.transcribes-spoken-dialog\",URI=\"subtitles.m3u8\"\n"
 	}
-	hlsHeaderContent := fmt.Sprintf("#EXTM3U\n%v#EXT-X-STREAM-INF:BANDWIDTH=1000000,FRAME-RATE=%f%v\n%s", headerSubsLine, frameRate, xStreamInfSuffix, hlsSegmentsFilename)
+	hlsHeaderContent := fmt.Sprintf("#EXTM3U\n%v#EXT-X-STREAM-INF:BANDWIDTH=1000000,FRAME-RATE=%f%v\n%s\n#EXT-X-ENDLIST", headerSubsLine, frameRate, xStreamInfSuffix, hlsSegmentsFilename)
 	hlsHeaderErr := os.WriteFile(hlsHeaderPath, []byte(hlsHeaderContent), os.ModePerm)
 	if hlsHeaderErr != nil {
 		log.Println("Error writing hls header:", hlsHeaderErr)
@@ -247,7 +247,7 @@ func runConvertToHLS(inPath string, outFolder string, audioStreamIndex int, vide
 	// Write the subs m3u8.
 	if hasSubtitles {
 		durationInt := int(duration)
-		subsContent := fmt.Sprintf("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:%d\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:%d,\nsubtitles.vtt", durationInt, durationInt)
+		subsContent := fmt.Sprintf("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:%d\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:%d,\nsubtitles.vtt\n#EXT-X-ENDLIST", durationInt, durationInt)
 		subsPath := filepath.Join(outFolder, "subtitles.m3u8")
 		os.WriteFile(subsPath, []byte(subsContent), os.ModePerm)
 
