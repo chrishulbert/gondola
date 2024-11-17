@@ -31,7 +31,7 @@ func convertToHLSAppropriately(inPath string, outFolder string, config Config) e
 	log.Println("Probing, this sometimes takes a while...")
 	probeResult, probeErr := probe(inPath)
 	if probeErr != nil {
-		return errors.New("Couldn't probe " + inPath)
+		return fmt.Errorf("Couldn't probe "+inPath+" - %v", probeErr)
 	}
 	log.Printf("Probed, found %v streams", len(probeResult.Streams))
 	log.Printf("Probe result: %+v", probeResult)
